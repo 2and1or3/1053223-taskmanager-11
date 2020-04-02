@@ -366,22 +366,22 @@ const createLoadButtonTemplate = function () {
   );
 };
 
-const render = function (container, template, place = 'beforeend') {
+const render = function (container, template, place = `beforeend`) {
   container.insertAdjacentHTML(place, template);
 };
 
-const main = document.querySelector('.main');
-const mainControl = main.querySelector('.control');
+const main = document.querySelector(`.main`);
+const mainControl = main.querySelector(`.control`);
 
 render(mainControl, createMenuTemplate());
 render(main, createFiltersTemplate());
 render(main, BOARD_CONTAINER);
 
-const board = main.querySelector('.board');
+const board = main.querySelector(`.board`);
 render(board, createSortTemplate());
 render(board, TASK_CONTAINER);
 
-const tasks = board.querySelector('.board__tasks');
+const tasks = board.querySelector(`.board__tasks`);
 render(tasks, createCardEditorTemplate());
 
 for (let i = 0; i < CARD_COUNT; i++) {
