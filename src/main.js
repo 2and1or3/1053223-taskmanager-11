@@ -1,8 +1,11 @@
 'use strict';
 
 const CARD_COUNT = 3;
-const BOARD_CONTAINER = `<section class="board container"></section>`;
-const TASK_CONTAINER = `<div class="board__tasks"></div>`;
+
+const createBoardContainer = () => `<section class="board container"></section>`;
+
+const createTaskContainer = () => `<div class="board__tasks"></div>`;
+
 const createMenuTemplate = function () {
   return (
     `<section class="control__btn-wrap">
@@ -375,11 +378,11 @@ const mainControl = main.querySelector(`.control`);
 
 render(mainControl, createMenuTemplate());
 render(main, createFiltersTemplate());
-render(main, BOARD_CONTAINER);
+render(main, createBoardContainer());
 
 const board = main.querySelector(`.board`);
 render(board, createSortTemplate());
-render(board, TASK_CONTAINER);
+render(board, createTaskContainer());
 
 const tasks = board.querySelector(`.board__tasks`);
 render(tasks, createCardEditorTemplate());
