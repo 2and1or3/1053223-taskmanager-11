@@ -8,4 +8,4 @@ const createSortTemplate = function () {
   );
 };
 
-export default createSortTemplate;
+export {createSortTemplate};
