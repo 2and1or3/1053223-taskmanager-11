@@ -4,4 +4,4 @@ const createLoadButtonTemplate = function () {
   );
 };
 
-export default createLoadButtonTemplate;
+export {createLoadButtonTemplate};
