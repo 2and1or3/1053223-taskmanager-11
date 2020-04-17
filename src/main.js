@@ -8,7 +8,7 @@ import {createLoadButtonTemplate} from './components/load-button.js';
 import {generateFilters} from './mock/filter.js';
 import {cards} from './mock/task.js';
 
-const BUTTON_SHOW_CARD = 8;
+const CARDS_STEP = 8;
 
 const filters = generateFilters();
 
@@ -37,15 +37,15 @@ const tasks = board.querySelector(`.board__tasks`);
 render(tasks, createCardEditorTemplate(cards[0]));
 
 
-let cardEnd = 1;
+let visibleCards = 1;
 
 const loadCard = () => {
-  const newCardEnd = (cardEnd + BUTTON_SHOW_CARD) > cardsCount ? cardsCount : cardEnd + BUTTON_SHOW_CARD;
+  const newVisibleCards = (visibleCards + CARDS_STEP) > cardsCount ? cardsCount : visibleCards + CARDS_STEP;
 
-  for (let i = cardEnd; i < newCardEnd; i++) {
+  for (let i = visibleCards; i < newVisibleCards; i++) {
     render(tasks, createCardTemplate(cards[i]));
   }
-  cardEnd = newCardEnd;
+  visibleCards = newVisibleCards;
 };
 
 loadCard();
@@ -56,7 +56,7 @@ const loadButton = board.querySelector(`.load-more`);
 
 loadButton.addEventListener(`click`, () => {
   loadCard();
-  if (cardEnd >= cardsCount) {
+  if (visibleCards >= cardsCount) {
     loadButton.remove();
   }
 });

@@ -1,7 +1,6 @@
 const formatTime = (date) => {
   const hours = date.getHours();
-  const minutes = date.getMinutes();
-
+  let minutes = String(date.getMinutes()).padStart(2, 0);
   return `${hours}:${minutes}`;
 };
 

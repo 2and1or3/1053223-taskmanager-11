@@ -1,40 +1,47 @@
 import {cards} from './task.js';
 import {checkDate} from '../utils.js';
 
-const checkCards = () => {
+const FILTER_TYPES = {
+  ALL: `all`,
+  OVERDUE: `overdue`,
+  TODAY: `today`,
+  FAVORITES: `favorites`,
+  REPEATING: `repeating`,
+  ARCHIVE: `archive`,
+};
+
+const updateFilters = () => {
   const filters = {
-    'all': cards.length,
-    'overdue': 0,
-    'today': 0,
-    'favorites': 0,
-    'repeating': 0,
-    'archive': 0,
+    [FILTER_TYPES.ALL]: cards.length,
+    [FILTER_TYPES.OVERDUE]: 0,
+    [FILTER_TYPES.TODAY]: 0,
+    [FILTER_TYPES.FAVORITES]: 0,
+    [FILTER_TYPES.REPEATING]: 0,
+    [FILTER_TYPES.ARCHIVE]: 0,
   };
 
   const today = new Date();
 
   cards.forEach((it) => {
     if (checkDate(it.dueDate)) {
-      filters[`overdue`]++;
+      filters[FILTER_TYPES.OVERDUE]++;
     }
 
-    if (it.dueDate) {
-      if (it.dueDate.getDate() === today.getDate()) {
-        filters[`today`]++;
-      }
+    if (it.dueDate && it.dueDate.getDate() === today.getDate()) {
+      filters[FILTER_TYPES.TODAY]++;
     }
 
     if (it.isFavorite) {
-      filters[`favorites`]++;
+      filters[FILTER_TYPES.FAVORITES]++;
     }
 
 
     if (Object.values(it.repeatDays).some(Boolean)) {
-      filters[`repeating`]++;
+      filters[FILTER_TYPES.REPEATING]++;
     }
 
     if (it.isArchive) {
-      filters[`archive`]++;
+      filters[FILTER_TYPES.ARCHIVE]++;
     }
   });
 
@@ -42,7 +49,7 @@ const checkCards = () => {
 };
 
 const generateFilters = () => {
-  const filtersCount = checkCards();
+  const filtersCount = updateFilters();
   const filters = [];
 
   for (const [key, value] of Object.entries(filtersCount)) {
