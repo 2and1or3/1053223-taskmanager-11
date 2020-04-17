@@ -14,18 +14,28 @@ const checkCards = () => {
   const today = new Date();
 
   cards.forEach((it) => {
-
-    checkDate(it.dueDate) ? filters[`overdue`]++ : ``;
-
-    if (it.dueDate) {
-      it.dueDate.getDate() === today.getDate() ? filters[`today`]++ : ``;
+    if (checkDate(it.dueDate)) {
+      filters[`overdue`]++;
     }
 
-    it.isFavorite ? filters[`favorites`]++ : ``;
+    if (it.dueDate) {
+      if (it.dueDate.getDate() === today.getDate()) {
+        filters[`today`]++;
+      }
+    }
 
-    Object.values(it.repeatDays).some(Boolean) ? filters[`repeating`]++ : ``;
+    if (it.isFavorite) {
+      filters[`favorites`]++;
+    }
 
-    it.isArchive ? filters[`archive`]++ : ``;
+
+    if (Object.values(it.repeatDays).some(Boolean)) {
+      filters[`repeating`]++;
+    }
+
+    if (it.isArchive) {
+      filters[`archive`]++;
+    }
   });
 
   return filters;
