@@ -1,7 +1,7 @@
 import {COLORS} from '../const.js';
 
 const DIFFERENCE_DAY = 7;
-const CARD_COUNT = 20;
+const CARD_COUNT = 19;
 
 const DESCRIPTIONS = [
   `Изучить теорию`,

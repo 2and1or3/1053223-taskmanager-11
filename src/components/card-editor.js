@@ -1,5 +1,5 @@
 import {MONTH_NAMES, DAYS, COLORS} from '../const.js';
-import {formatTime} from '../utils.js';
+import {formatTime, createElement} from '../utils.js';
 
 const getRepeatDayTemplate = (day, i, isChecked) => {
   return (
@@ -130,4 +130,27 @@ const createCardEditorTemplate = function (task) {
   );
 };
 
-export {createCardEditorTemplate};
+class CardEditor {
+  constructor(task) {
+    this._task = task;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createCardEditorTemplate(this._task);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
+
+export default CardEditor;
