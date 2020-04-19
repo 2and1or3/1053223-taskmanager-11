@@ -1,50 +1,36 @@
 import {MONTH_NAMES, DAYS, COLORS} from '../const.js';
-import {formatTime} from '../utils.js';
+import {formatTime, createElement} from '../utils.js';
 
-const createRepeatDaysMarkup = (days, repeatDays) => {
-
+const getRepeatDayTemplate = (day, i, isChecked) => {
   return (
-    days.map((day, i) => {
-      const isChecked = repeatDays[day];
-
-      return (
-        `<input
-          class="visually-hidden card__repeat-day-input"
-          type="checkbox"
-          id="repeat-${day}-${i}"
-          name="repeat"
-          value="${day}"
-          ${isChecked ? `checked` : ``}
-        />
-        <label class="card__repeat-day" for="repeat-${day}-${i}"
-          >${day}</label
-        >`);
-    }).join(`\n`)
-  );
+    `<input
+      class="visually-hidden card__repeat-day-input"
+      type="checkbox"
+      id="repeat-${day}-${i}"
+      name="repeat"
+      value="${day}"
+      ${isChecked ? `checked` : ``}
+    />
+    <label class="card__repeat-day" for="repeat-${day}-${i}"
+      >${day}</label
+    >`);
 };
 
-const createColorsMarkup = (colors, currentColor) => {
-
+const getColorTemplate = (color, isChecked) => {
   return (
-    colors.map((color) => {
-      const isChecked = currentColor === color;
-
-      return (
-        `<input
-              type="radio"
-              id="color-${color}-4"
-              class="card__color-input card__color-input--${color} visually-hidden"
-              name="color"
-              value="${color}"
-              ${isChecked ? `checked` : ``}
-            />
-            <label
-              for="color-${color}-4"
-              class="card__color card__color--${color}"
-              >${color}</label
-            >`
-      );
-    }).join(`\n`)
+    `<input
+          type="radio"
+          id="color-${color}-4"
+          class="card__color-input card__color-input--${color} visually-hidden"
+          name="color"
+          value="${color}"
+          ${isChecked ? `checked` : ``}
+        />
+        <label
+          for="color-${color}-4"
+          class="card__color card__color--${color}"
+          >${color}</label
+        >`
   );
 };
 
@@ -62,8 +48,13 @@ const createCardEditorTemplate = function (task) {
   const repeatClass = isRepeatTask ? `card--repeat` : ``;
   const deadlineClass = isExpired ? `card--deadline` : ``;
 
-  const repeatDaysMarkup = createRepeatDaysMarkup(DAYS, repeatDays);
-  const colorsMarkup = createColorsMarkup(COLORS, color);
+  const repeatDaysMarkup = DAYS.map((day, i) => {
+    return getRepeatDayTemplate(day, i, repeatDays[day]);
+  }).join(`\n`);
+
+  const colorsMarkup = COLORS.map((item) => {
+    return getColorTemplate(item, item === color);
+  }).join(`\n`);
 
 
   return (
@@ -139,4 +130,27 @@ const createCardEditorTemplate = function (task) {
   );
 };
 
-export {createCardEditorTemplate};
+class CardEditor {
+  constructor(task) {
+    this._task = task;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createCardEditorTemplate(this._task);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
+
+export default CardEditor;
