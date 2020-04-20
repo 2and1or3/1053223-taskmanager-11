@@ -48,13 +48,15 @@ const createCardEditorTemplate = function (task) {
   const repeatClass = isRepeatTask ? `card--repeat` : ``;
   const deadlineClass = isExpired ? `card--deadline` : ``;
 
-  const repeatDaysMarkup = DAYS.map((day, i) => {
-    return getRepeatDayTemplate(day, i, repeatDays[day]);
-  }).join(`\n`);
+  const repeatDaysMarkup =
+  DAYS
+  .map((day, i) => getRepeatDayTemplate(day, i, repeatDays[day]))
+.join(`\n`);
 
-  const colorsMarkup = COLORS.map((item) => {
-    return getColorTemplate(item, item === color);
-  }).join(`\n`);
+  const colorsMarkup =
+  COLORS
+  .map((item) => getColorTemplate(item, item === color))
+  .join(`\n`);
 
 
   return (

@@ -37,11 +37,7 @@ const generateTask = () => {
   };
 };
 
-const generateTasks = (count) => {
-  return new Array(count)
-  .fill(``)
-  .map(generateTask);
-};
+const generateTasks = (count) => Array(count).fill(``).map(generateTask);
 
 const cards = generateTasks(CARD_COUNT);
 

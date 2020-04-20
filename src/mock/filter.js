@@ -1,14 +1,6 @@
 import {cards} from './task.js';
 import {checkDate} from '../utils.js';
-
-const FILTER_TYPES = {
-  ALL: `all`,
-  OVERDUE: `overdue`,
-  TODAY: `today`,
-  FAVORITES: `favorites`,
-  REPEATING: `repeating`,
-  ARCHIVE: `archive`,
-};
+import {FILTER_TYPES} from '../const.js';
 
 const updateFilters = () => {
   const filters = {
@@ -64,4 +56,4 @@ const generateFilters = () => {
   return filters;
 };
 
-export {generateFilters};
+export {generateFilters, updateFilters};
