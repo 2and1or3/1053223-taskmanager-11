@@ -10,7 +10,8 @@ const createCardTemplate = function (task) {
   const date = isDateShowing ? `${dueDate.getDate()} ${MONTH_NAMES[dueDate.getMonth()]}` : ``;
   const time = isDateShowing ? `${formatTime(dueDate)}` : ``;
 
-  const repeatClass = Object.values(repeatDays).some(Boolean) ? `card--repeat` : ``;
+  const isRepeats = Object.values(repeatDays).some(Boolean);
+  const repeatClass = isRepeats ? `card--repeat` : ``;
 
   const deadlineClass = isExpired ? `card--deadline` : ``;
   const archiveButtonInactiveClass = isArchive ? `` : `card__btn--disabled`;

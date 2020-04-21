@@ -1,6 +1,6 @@
 import {createElement} from '../utils.js';
 
-const createMenuTemplate = function () {
+const createMenuTemplate = () => {
   return (
     `<section class="control__btn-wrap">
         <input
@@ -10,25 +10,21 @@ const createMenuTemplate = function () {
           class="control__input visually-hidden"
         />
         <label for="control__new-task" class="control__label control__label--new-task"
-          >+ ADD NEW TASK</label
-        >
+          >+ ADD NEW TASK</label>
         <input
           type="radio"
           name="control"
           id="control__task"
           class="control__input visually-hidden"
-          checked
-        />
+          checked/>
         <label for="control__task" class="control__label">TASKS</label>
         <input
           type="radio"
           name="control"
           id="control__statistic"
-          class="control__input visually-hidden"
-        />
+          class="control__input visually-hidden"/>
         <label for="control__statistic" class="control__label"
-          >STATISTICS</label
-        >
+          >STATISTICS</label>
       </section>`
   );
 };

@@ -1,10 +1,6 @@
 import {createElement} from '../utils.js';
 
-const createLoadButtonTemplate = function () {
-  return (
-    `<button class="load-more" type="button">load more</button>`
-  );
-};
+const createLoadButtonTemplate = () => `<button class="load-more" type="button">load more</button>`;
 
 class LoadButton {
   constructor() {
