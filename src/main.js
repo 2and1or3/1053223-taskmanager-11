@@ -1,22 +1,11 @@
 import MenuComponent from './components/menu.js';
 import FiltersComponent from './components/filters.js';
-import SortComponent from './components/sort.js';
-import CardEditorComponent from './components/card-editor.js';
-import CardComponent from './components/card.js';
-import LoadButtonComponent from './components/load-button.js';
-import BoardComponent from './components/board.js';
-import CardsContainerComponent from './components/cards-container.js';
-import NoTaskComponent from './components/no-task.js';
+
+import BoardController from './controllers/board-controller.js';
 
 import {render, checkDate} from './utils.js';
 import {FILTER_TYPES} from './const.js';
 import {tasksData} from './mock/task.js';
-
-const CARDS_STEP = 8;
-
-const PRESS_KEY = {
-  ESC: 27,
-};
 
 const filters = {
   [FILTER_TYPES.ALL]: {
@@ -76,106 +65,13 @@ const updateFilters = (tasks) => {
 
 updateFilters(tasksData);
 
-const quantityOfTasks = tasksData.length;
-
 
 const main = document.querySelector(`.main`);
 const mainControl = main.querySelector(`.control`);
 
-render(mainControl, new MenuComponent().getElement());
-render(main, new FiltersComponent(filters).getElement());
-
-const isEmptyBoard = () => !quantityOfTasks;
-
-const renderCard = (cardsContainer, task) => {
-  const cardComponent = new CardComponent(task);
-  render(cardsContainer, cardComponent.getElement());
-
-  const cardEdit = cardComponent.getElement().querySelector(`.card__btn--edit`);
+render(mainControl, new MenuComponent());
+render(main, new FiltersComponent(filters));
 
 
-  const cardEditorComponent = new CardEditorComponent(task);
-  const editorForm = cardEditorComponent.getElement().querySelector(`form`);
-
-  const openEditor = (evt) => {
-    evt.preventDefault();
-    cardsContainer.replaceChild(cardEditorComponent.getElement(), cardComponent.getElement());
-    document.addEventListener(`keydown`, onEscPress);
-  };
-
-  const closeEditor = (evt) => {
-    evt.preventDefault();
-    cardsContainer.replaceChild(cardComponent.getElement(), cardEditorComponent.getElement());
-    document.removeEventListener(`keydown`, onEscPress);
-  };
-
-  const onEscPress = (evt) => {
-    evt.preventDefault();
-    if (evt.keyCode === PRESS_KEY.ESC) {
-      closeEditor(evt);
-    }
-  };
-
-  const onEditClick = (evt) => openEditor(evt);
-
-  const onEditorFormSubmit = (evt) => closeEditor(evt);
-
-  cardEdit.addEventListener(`click`, onEditClick);
-  editorForm.addEventListener(`submit`, onEditorFormSubmit);
-};
-
-const renderBoard = (boardContainer, tasks) => {
-  const boardComponent = new BoardComponent();
-  render(boardContainer, boardComponent.getElement());
-
-  if (isEmptyBoard()) {
-    const noTaskComponent = new NoTaskComponent();
-    render(boardComponent.getElement(), noTaskComponent.getElement());
-  } else {
-
-    const sortComponent = new SortComponent();
-    render(boardComponent.getElement(), sortComponent.getElement());
-
-
-    const cardsContainerComponent = new CardsContainerComponent();
-    render(boardComponent.getElement(), cardsContainerComponent.getElement());
-
-
-    let visibleCards = 0;
-    let addCardStep = () => visibleCards + CARDS_STEP;
-
-    const loadMore = (begin, end) => {
-      tasks
-      .slice(begin, end)
-      .forEach((task) => renderCard(cardsContainerComponent.getElement(), task));
-
-      const diffrence = end - begin;
-      visibleCards += diffrence;
-    };
-
-    loadMore(0, CARDS_STEP);
-
-    const onLoadButtonClick = (evt) => {
-      evt.preventDefault();
-
-      const isCardEnd = addCardStep() >= quantityOfTasks;
-
-      const currentEnd = isCardEnd ? quantityOfTasks : addCardStep();
-
-      loadMore(visibleCards, currentEnd);
-
-      if (isCardEnd) {
-        loadButtonComponent.getElement().remove();
-        loadButtonComponent.removeElement();
-      }
-    };
-
-    const loadButtonComponent = new LoadButtonComponent();
-    render(boardComponent.getElement(), loadButtonComponent.getElement());
-
-    loadButtonComponent.getElement().addEventListener(`click`, onLoadButtonClick);
-  }
-};
-
-
-renderBoard(main, tasksData);
+const boardController = new BoardController(main);
+boardController.render(tasksData);

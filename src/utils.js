@@ -15,8 +15,23 @@ const createElement = (template) => {
   return container.firstChild;
 };
 
-const render = (container, element) => {
-  container.append(element);
+const render = (containerElement, component) => containerElement.append(component.getElement());
+
+const replace = (newComponent, oldComponent) => {
+  const newElement = newComponent.getElement();
+  const oldElement = oldComponent.getElement();
+  const parentElement = oldElement.parentElement;
+
+  const isExistElements = !!(newElement && oldElement && parentElement);
+
+  if (isExistElements && parentElement.contains(oldElement)) {
+    parentElement.replaceChild(newComponent.getElement(), oldComponent.getElement());
+  }
 };
 
-export {formatTime, checkDate, createElement, render};
+const removeComponent = (component) => {
+  component.getElement().remove();
+  component.removeElement();
+};
+
+export {formatTime, checkDate, createElement, render, replace, removeComponent};
