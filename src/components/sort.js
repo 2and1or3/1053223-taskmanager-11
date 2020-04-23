@@ -14,6 +14,10 @@ class Sort extends AbstractComponent {
   getTemplate() {
     return createSortTemplate();
   }
+
+  setClickHandler(cb) {
+    this.getElement().addEventListener(`click`, cb);
+  }
 }
 
 export default Sort;
