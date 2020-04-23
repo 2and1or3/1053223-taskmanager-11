@@ -15,6 +15,11 @@ const SORT_TYPES = {
   DATE_DOWN: `date-down`,
 };
 
+const SORT_FUNCTIONS = {
+  [SORT_TYPES.DATE_UP]: (leftTask, rightTask) => leftTask.dueDate - rightTask.dueDate,
+  [SORT_TYPES.DATE_DOWN]: (leftTask, rightTask) => rightTask.dueDate - leftTask.dueDate,
+};
+
 
 class BoardController {
   constructor(container) {
@@ -48,23 +53,18 @@ class BoardController {
       render(this._boardComponent.getElement(), this._cardsContainerComponent);
       render(this._boardComponent.getElement(), this._loadButtonComponent);
 
-      const getSortUpDateTasks = (initialTasks) => {
-        const sortedUpDate = initialTasks.slice(0);
 
-        sortedUpDate.sort((leftTask, rightTask) => leftTask.dueDate - rightTask.dueDate);
+      const getSortedTasks = (sortFuncKey) => {
+        const sorted = SORTED_TASKS[SORT_TYPES.DEFAULT].slice(0);
 
-        return sortedUpDate;
-      };
-      const getSortDownDateTasks = (initialTasks) => {
-        const sortedDownDate = initialTasks.slice(0);
+        sorted.sort(SORT_FUNCTIONS[sortFuncKey]);
 
-        sortedDownDate.sort((leftTask, rightTask) => rightTask.dueDate - leftTask.dueDate);
-
-        return sortedDownDate;
+        return sorted;
       };
 
-      SORTED_TASKS[SORT_TYPES.DATE_UP] = getSortUpDateTasks(SORTED_TASKS[SORT_TYPES.DEFAULT]);
-      SORTED_TASKS[SORT_TYPES.DATE_DOWN] = getSortDownDateTasks(SORTED_TASKS[SORT_TYPES.DEFAULT]);
+
+      SORTED_TASKS[SORT_TYPES.DATE_UP] = getSortedTasks(SORT_TYPES.DATE_UP);
+      SORTED_TASKS[SORT_TYPES.DATE_DOWN] = getSortedTasks(SORT_TYPES.DATE_DOWN);
 
       let visibleCards = 0;
       let addCardStep = () => visibleCards + CARDS_STEP;
