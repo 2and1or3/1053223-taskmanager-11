@@ -1,4 +1,4 @@
-import SortComponent from '../components/sort.js';
+import SortComponent, {SORT_TYPES} from '../components/sort.js';
 import LoadButtonComponent from '../components/load-button.js';
 import BoardComponent from '../components/board.js';
 import CardsContainerComponent from '../components/cards-container.js';
@@ -9,11 +9,6 @@ import CardController from './card-controller.js';
 import {render, removeComponent} from '../utils.js';
 
 const CARDS_STEP = 8;
-const SORT_TYPES = {
-  DEFAULT: `default`,
-  DATE_UP: `date-up`,
-  DATE_DOWN: `date-down`,
-};
 
 const SORT_FUNCTIONS = {
   [SORT_TYPES.DATE_UP]: (leftTask, rightTask) => leftTask.dueDate - rightTask.dueDate,
@@ -42,7 +37,6 @@ class BoardController {
     const quantityOfTasks = SORTED_TASKS[SORT_TYPES.DEFAULT].length;
     const isEmptyBoard = !quantityOfTasks;
     let tasksToRender = SORTED_TASKS[SORT_TYPES.DEFAULT];
-    let sortType = SORT_TYPES.DEFAULT;
 
     render(this._container, this._boardComponent);
 
@@ -107,11 +101,12 @@ class BoardController {
       };
 
       const onSortClick = (evt) => {
-        const isRepeat = sortType === evt.target.dataset.sortType;
+        const oldSortType = this._sortComponent.getCurrentSortType();
+        this._sortComponent.setCurrentSortType(evt);
+        const isChanged = oldSortType !== this._sortComponent.getCurrentSortType();
 
-        if (!isRepeat) {
-          sortType = evt.target.dataset.sortType;
-          repeatRenderBoard(sortType);
+        if (isChanged) {
+          repeatRenderBoard(this._sortComponent.getCurrentSortType());
         }
       };
 
