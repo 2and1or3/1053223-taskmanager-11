@@ -1,19 +1,20 @@
 import {MONTH_NAMES, DAYS, COLORS} from '../const.js';
-import {formatTime, createElement} from '../utils.js';
+import {formatTime} from '../utils.js';
+import AbstractComponent from './abstract-component.js';
 
-const getRepeatDayTemplate = (day, i, isChecked) => {
+const getRepeatDayTemplate = (day, isChecked) => {
   return (
     `<input
       class="visually-hidden card__repeat-day-input"
       type="checkbox"
-      id="repeat-${day}-${i}"
+      id="repeat-${day}-1"
       name="repeat"
       value="${day}"
       ${isChecked ? `checked` : ``}
     />
-    <label class="card__repeat-day" for="repeat-${day}-${i}"
-      >${day}</label
-    >`);
+    <label class="card__repeat-day" for="repeat-${day}-1"
+      >${day}</label>`
+  );
 };
 
 const getColorTemplate = (color, isChecked) => {
@@ -29,8 +30,7 @@ const getColorTemplate = (color, isChecked) => {
         <label
           for="color-${color}-4"
           class="card__color card__color--${color}"
-          >${color}</label
-        >`
+          >${color}</label>`
   );
 };
 
@@ -49,14 +49,14 @@ const createCardEditorTemplate = function (task) {
   const deadlineClass = isExpired ? `card--deadline` : ``;
 
   const repeatDaysMarkup =
-  DAYS
-  .map((day, i) => getRepeatDayTemplate(day, i, repeatDays[day]))
-.join(`\n`);
+    DAYS
+      .map((day) => getRepeatDayTemplate(day, repeatDays[day]))
+      .join(`\n`);
 
   const colorsMarkup =
-  COLORS
-  .map((item) => getColorTemplate(item, item === color))
-  .join(`\n`);
+    COLORS
+      .map((item) => getColorTemplate(item, item === color))
+      .join(`\n`);
 
 
   return (
@@ -132,26 +132,18 @@ const createCardEditorTemplate = function (task) {
   );
 };
 
-class CardEditor {
+class CardEditor extends AbstractComponent {
   constructor(task) {
+    super();
     this._task = task;
-    this._element = null;
   }
 
   getTemplate() {
     return createCardEditorTemplate(this._task);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+  setSubmitHandler(cb) {
+    this.getElement().querySelector(`form`).addEventListener(`submit`, cb);
   }
 }
 

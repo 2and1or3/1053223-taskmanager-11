@@ -1,14 +1,16 @@
 import {createElement} from '../utils.js';
 
-const createTaskContainer = () => `<div class="board__tasks"></div>`;
-
-class TaskContainer {
+class AbstractComponent {
   constructor() {
+    if (new.target === AbstractComponent) {
+      throw new Error(`Can't instantiate AbstractComponent, only concrete one.`);
+    }
+
     this._element = null;
   }
 
   getTemplate() {
-    return createTaskContainer();
+    throw new Error(`Abstract method not implemented: getTemplate`);
   }
 
   getElement() {
@@ -24,4 +26,4 @@ class TaskContainer {
   }
 }
 
-export default TaskContainer;
+export default AbstractComponent;

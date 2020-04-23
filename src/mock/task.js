@@ -39,6 +39,6 @@ const generateTask = () => {
 
 const generateTasks = (count) => Array(count).fill(``).map(generateTask);
 
-const cards = generateTasks(CARD_COUNT);
+const tasksData = generateTasks(CARD_COUNT);
 
-export {cards};
+export {tasksData};
