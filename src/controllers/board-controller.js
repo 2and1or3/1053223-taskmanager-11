@@ -19,6 +19,9 @@ const SORT_FUNCTIONS = {
 class BoardController {
   constructor(container) {
     this._container = container;
+    this._initialTasks = null;
+    this._tasksToRender = null;
+    this._visibleCards = 0;
     this._boardComponent = new BoardComponent();
     this._noTaskComponent = new NoTaskComponent();
     this._sortComponent = new SortComponent();
@@ -26,17 +29,69 @@ class BoardController {
     this._loadButtonComponent = new LoadButtonComponent();
   }
 
+  getSortedTasks(sortFuncKey) {
+    const sorted = this._initialTasks.slice(0);
+
+    sorted.sort(SORT_FUNCTIONS[sortFuncKey]);
+
+    return sorted;
+  }
+
+  loadMore(begin, end, currentTasks) {
+    currentTasks
+      .slice(begin, end)
+      .forEach((task) => {
+        const cardController = new CardController(this._cardsContainerComponent.getElement());
+        cardController.render(task);
+      });
+
+    const diffrence = end - begin;
+    this._visibleCards += diffrence;
+  }
+
+  loadButtonHandler(evt) {
+    evt.preventDefault();
+    const addCardStep = () => this._visibleCards + CARDS_STEP;
+
+    const isCardEnd = addCardStep() >= this._initialTasks.length;
+
+    const currentEnd = isCardEnd ? this._initialTasks.length : addCardStep();
+
+    this.loadMore(this._visibleCards, currentEnd, this._tasksToRender);
+
+    if (isCardEnd) {
+      removeComponent(this._loadButtonComponent);
+    }
+  }
+
+  clear() {
+    this._cardsContainerComponent.getElement().innerHTML = ``;
+    removeComponent(this._loadButtonComponent);
+  }
+
+  repeatRenderBoard(sortKey) {
+    this._tasksToRender = this.getSortedTasks(sortKey);
+    this.clear();
+    this._visibleCards = 0;
+    this.loadMore(0, CARDS_STEP, this._tasksToRender);
+    render(this._boardComponent.getElement(), this._loadButtonComponent);
+    this._loadButtonComponent.setClickHandler(this.loadButtonHandler.bind(this));
+  }
+
+  sortClickHandler(evt) {
+    const oldSortType = this._sortComponent.getCurrentSortType();
+    this._sortComponent.setCurrentSortType(evt);
+    const isChanged = oldSortType !== this._sortComponent.getCurrentSortType();
+
+    if (isChanged) {
+      this.repeatRenderBoard(this._sortComponent.getCurrentSortType());
+    }
+  }
+
   render(tasks) {
-
-    const SORTED_TASKS = {
-      [SORT_TYPES.DEFAULT]: tasks,
-      [SORT_TYPES.DATE_UP]: null,
-      [SORT_TYPES.DATE_DOWN]: null,
-    };
-
-    const quantityOfTasks = SORTED_TASKS[SORT_TYPES.DEFAULT].length;
-    const isEmptyBoard = !quantityOfTasks;
-    let tasksToRender = SORTED_TASKS[SORT_TYPES.DEFAULT];
+    this._initialTasks = tasks;
+    this._tasksToRender = this._initialTasks;
+    const isEmptyBoard = !this._initialTasks.length;
 
     render(this._container, this._boardComponent);
 
@@ -48,77 +103,11 @@ class BoardController {
       render(this._boardComponent.getElement(), this._loadButtonComponent);
 
 
-      const getSortedTasks = (sortFuncKey) => {
-        const sorted = SORTED_TASKS[SORT_TYPES.DEFAULT].slice(0);
+      this.loadMore(0, CARDS_STEP, this._tasksToRender);
 
-        sorted.sort(SORT_FUNCTIONS[sortFuncKey]);
-
-        return sorted;
-      };
-
-
-      SORTED_TASKS[SORT_TYPES.DATE_UP] = getSortedTasks(SORT_TYPES.DATE_UP);
-      SORTED_TASKS[SORT_TYPES.DATE_DOWN] = getSortedTasks(SORT_TYPES.DATE_DOWN);
-
-      let visibleCards = 0;
-      let addCardStep = () => visibleCards + CARDS_STEP;
-
-      const loadMore = (begin, end, currentTasks) => {
-        currentTasks
-          .slice(begin, end)
-          .forEach((task) => {
-            const cardController = new CardController(this._cardsContainerComponent.getElement());
-            cardController.render(task);
-          });
-
-        const diffrence = end - begin;
-        visibleCards += diffrence;
-      };
-
-      loadMore(0, CARDS_STEP, tasksToRender);
-
-      const onLoadButtonClick = (evt) => {
-        evt.preventDefault();
-
-        const isCardEnd = addCardStep() >= quantityOfTasks;
-
-        const currentEnd = isCardEnd ? quantityOfTasks : addCardStep();
-
-        loadMore(visibleCards, currentEnd, tasksToRender);
-
-        if (isCardEnd) {
-          removeComponent(this._loadButtonComponent);
-        }
-      };
-
-      const repeatRenderBoard = (sortKey) => {
-        tasksToRender = SORTED_TASKS[sortKey];
-        this.clear();
-        visibleCards = 0;
-        loadMore(0, CARDS_STEP, tasksToRender);
-        render(this._boardComponent.getElement(), this._loadButtonComponent);
-        this._loadButtonComponent.setClickHandler(onLoadButtonClick);
-      };
-
-      const onSortClick = (evt) => {
-        const oldSortType = this._sortComponent.getCurrentSortType();
-        this._sortComponent.setCurrentSortType(evt);
-        const isChanged = oldSortType !== this._sortComponent.getCurrentSortType();
-
-        if (isChanged) {
-          repeatRenderBoard(this._sortComponent.getCurrentSortType());
-        }
-      };
-
-
-      this._sortComponent.setClickHandler(onSortClick);
-      this._loadButtonComponent.setClickHandler(onLoadButtonClick);
+      this._sortComponent.setClickHandler(this.sortClickHandler.bind(this));
+      this._loadButtonComponent.setClickHandler(this.loadButtonHandler.bind(this));
     }
-  }
-
-  clear() {
-    this._cardsContainerComponent.getElement().innerHTML = ``;
-    removeComponent(this._loadButtonComponent);
   }
 }
 

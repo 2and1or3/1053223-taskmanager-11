@@ -1,19 +1,21 @@
 import {createElement} from '../utils.js';
 
-const CREATE_INSTANCE_ERR = `Can't instantiate AbstractComponent, only concrete one.`;
-const IMPLEMENT_METHOD_ERR = `Abstract method not implemented: getTemplate`;
+const ERRORS = {
+  INSTANCE: `Can't instantiate AbstractComponent, only concrete one.`,
+  IMPLEMENT: `Abstract method not implemented: getTemplate`,
+};
 
 class AbstractComponent {
   constructor() {
     if (new.target === AbstractComponent) {
-      throw new Error(CREATE_INSTANCE_ERR);
+      throw new Error(ERRORS.INSTANCE);
     }
 
     this._element = null;
   }
 
   getTemplate() {
-    throw new Error(IMPLEMENT_METHOD_ERR);
+    throw new Error(ERRORS.IMPLEMENT);
   }
 
   getElement() {

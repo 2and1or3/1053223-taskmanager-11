@@ -12,7 +12,7 @@ const createFilterMarkup = function (filter, key, isChecked) {
       name="filter"
       ${check}/>
     <label for="filter__${key}" class="filter__label">
-      ${title} <span class="filter__${key}-count">${count}</span></label>`
+      ${title} <span class="filter__${key}-count">${+count}</span></label>`
   );
 };
 
