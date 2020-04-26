@@ -32,11 +32,9 @@ class Sort extends AbstractComponent {
   }
 
   setCurrentSortType(evt) {
-    const isChanged = this.getCurrentSortType() !== evt.target.dataset.sortType;
     const isLink = evt.target.tagName === `A`;
 
-
-    if (isChanged && isLink) {
+    if (isLink) {
       this._currentSortType = evt.target.dataset.sortType;
     }
   }
