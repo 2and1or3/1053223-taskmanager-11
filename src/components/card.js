@@ -2,6 +2,22 @@ import {MONTH_NAMES} from '../const.js';
 import {formatTime, checkDate} from '../utils.js';
 import AbstractComponent from './abstract-component.js';
 
+const BUTTON_NAMES = {
+  EDIT: `edit`,
+  ARCHIVE: `archive`,
+  FAVORITES: `favorites`,
+};
+
+const createButtonMarkup = (name, isActive) => {
+  const activeClass = isActive ? `` : `card__btn--disabled`;
+
+  return (
+    `<button type="button" class="card__btn card__btn--${name} ${activeClass}">
+      ${name}
+    </button>`
+  );
+};
+
 const createCardTemplate = function (task) {
   const {color, description, dueDate, repeatDays, isArchive, isFavorite} = task;
 
@@ -15,25 +31,18 @@ const createCardTemplate = function (task) {
   const repeatClass = isRepeats ? `card--repeat` : ``;
 
   const deadlineClass = isExpired ? `card--deadline` : ``;
-  const archiveButtonInactiveClass = isArchive ? `` : `card__btn--disabled`;
-  const favoriteButtonInactiveClass = isFavorite ? `` : `card__btn--disabled`;
+  const buttonEdit = createButtonMarkup(BUTTON_NAMES.EDIT, true);
+  const buttonArchive = createButtonMarkup(BUTTON_NAMES.ARCHIVE, !isArchive);
+  const buttonFavorite = createButtonMarkup(BUTTON_NAMES.FAVORITES, !isFavorite);
 
   return (
     `<article class="card card--${color} ${repeatClass} ${deadlineClass}">
       <div class="card__form">
         <div class="card__inner">
           <div class="card__control">
-            <button type="button" class="card__btn card__btn--edit">
-              edit
-            </button>
-            <button type="button" class="card__btn card__btn--archive ${archiveButtonInactiveClass}">
-              archive
-            </button>
-            <button
-              type="button"
-              class="card__btn card__btn--favorites ${favoriteButtonInactiveClass}">
-              favorites
-            </button>
+            ${buttonEdit}
+            ${buttonArchive}
+            ${buttonFavorite}
           </div>
 
           <div class="card__color-bar">
@@ -74,8 +83,20 @@ class Card extends AbstractComponent {
     return createCardTemplate(this._task);
   }
 
-  setClickHandler(cb) {
-    this.getElement().querySelector(`.card__btn--edit`).addEventListener(`click`, cb);
+  getTask() {
+    return this._task;
+  }
+
+  setEditClickHandler(cb) {
+    this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.EDIT}`).addEventListener(`click`, cb);
+  }
+
+  setArchiveClickHandler(cb) {
+    this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.ARCHIVE}`).addEventListener(`click`, cb);
+  }
+
+  setFavoritesClickHandler(cb) {
+    this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.FAVORITES}`).addEventListener(`click`, cb);
   }
 }
 
