@@ -1,6 +1,10 @@
-import {MONTH_NAMES, DAYS, COLORS} from '../const.js';
-import {formatTime} from '../utils.js';
+import {DAYS, COLORS} from '../const.js';
+import {formatTime, formatDate} from '../utils.js';
 import AbstractSmartComponent from './abstract-smart-component.js';
+import flatpickr from "flatpickr";
+
+import "flatpickr/dist/flatpickr.min.css";
+
 
 const isRepeatingTask = (repeatDays) => Object.values(repeatDays).some(Boolean);
 
@@ -43,7 +47,7 @@ const createCardEditorTemplate = function (task, options = {}) {
   const isExpired = dueDate < Date.now();
 
   const isDateExist = !!dueDate;
-  const dateFieldText = isDateExist ? `${dueDate.getDate()} ${MONTH_NAMES[dueDate.getMonth()]}` : ``;
+  const dateFieldText = isDateExist ? formatDate(dueDate) : ``;
   const timeFieldText = isDateExist ? `${formatTime(dueDate)}` : ``;
 
   const date = isDateShowing ? `${dateFieldText}` : ``;
@@ -148,8 +152,9 @@ class CardEditor extends AbstractSmartComponent {
     this._isRepeat = isRepeatingTask(task.repeatDays);
     this._currentColor = task.color;
     this._currentRepeatDays = Object.assign({}, task.repeatDays);
+    this._flatpickr = null;
 
-
+    this._applyFlatpickr();
     this.recoveryListeners();
   }
 
@@ -188,6 +193,23 @@ class CardEditor extends AbstractSmartComponent {
     });
   }
 
+  _applyFlatpickr() {
+    if (this._flatpickr) {
+      this._flatpickr.destroy();
+      this._flatpickr = null;
+    }
+
+    if (this._isDateShowing) {
+      const inputDate = this.getElement().querySelector(`.card__date`);
+      const options = {
+        altInput: true,
+        allowInput: true,
+        defaultDate: this._task.dueDate || `today`,
+      };
+      this._flatpickr = flatpickr(inputDate, options);
+    }
+  }
+
   getTemplate() {
     const options = {
       isDateShowing: this._isDateShowing,
@@ -210,6 +232,7 @@ class CardEditor extends AbstractSmartComponent {
 
   rerender() {
     super.rerender();
+    this._applyFlatpickr();
   }
 
   recoveryListeners() {

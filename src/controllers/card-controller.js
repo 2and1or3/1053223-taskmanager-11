@@ -64,7 +64,7 @@ class CardController {
 
       const newTask = Object.assign({}, task, changedTask);
 
-      this._onDataChange(task, newTask);
+      this._onDataChange(newTask);
     });
 
     this._cardComponent.setFavoritesClickHandler(() => {
@@ -74,7 +74,7 @@ class CardController {
 
       const newTask = Object.assign({}, task, changedTask);
 
-      this._onDataChange(task, newTask);
+      this._onDataChange(newTask);
     });
 
     this._cardEditorComponent.setSubmitHandler(onFormSubmit);
@@ -92,8 +92,8 @@ class CardController {
     this._closeEditor(evt);
   }
 
-  getTask() {
-    return this._cardComponent.getTask();
+  getId() {
+    return this._cardComponent.getTask()._innerId;
   }
 
   updateRender(task) {

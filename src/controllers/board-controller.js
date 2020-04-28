@@ -41,12 +41,15 @@ class BoardController {
     const diffrence = end - begin;
     this._visibleCards += diffrence;
 
-    const newCardControllers = currentTasks.slice(begin, end).map((task) => {
-      const cardController = new CardController(this._cardsContainerComponent.getElement(), this._onDataChange.bind(this), this._onViewChange.bind(this));
-      cardController.render(task);
+    const newCardControllers =
+      currentTasks
+        .slice(begin, end)
+        .map((task) => {
+          const cardController = new CardController(this._cardsContainerComponent.getElement(), this._onDataChange.bind(this), this._onViewChange.bind(this));
+          cardController.render(task);
 
-      return cardController;
-    });
+          return cardController;
+        });
     this._visibleCardControllers = this._visibleCardControllers.concat(newCardControllers);
   }
 
@@ -79,16 +82,13 @@ class BoardController {
     this._loadButtonComponent.setClickHandler(this._loadButtonHandler.bind(this));
   }
 
-  _onDataChange(oldData, newData) {
-    const taskIndex = this._initialTasks.findIndex((task) => task === oldData);
-    const isExist = taskIndex !== -1;
+  _onDataChange(newData) {
+    this._initialTasks[newData._innerId] = newData;
 
-    if (isExist) {
-      const cardControllerIndex = this._visibleCardControllers.findIndex((controller) => controller.getTask() === oldData);
+    const controllerIndex = this._visibleCardControllers.findIndex((controller) => controller.getId() === newData._innerId);
 
-      this._initialTasks[taskIndex] = newData;
-      this._visibleCardControllers[cardControllerIndex].updateRender(this._initialTasks[taskIndex]);
-    }
+    this._visibleCardControllers[controllerIndex]
+      .updateRender(this._initialTasks[newData._innerId]);
   }
 
 
@@ -115,7 +115,10 @@ class BoardController {
   }
 
   render(tasks) {
-    this._initialTasks = tasks;
+    this._initialTasks = tasks.map((task, index) => {
+      task._innerId = index;
+      return task;
+    });
 
     const isEmptyBoard = !this._initialTasks.length;
 
