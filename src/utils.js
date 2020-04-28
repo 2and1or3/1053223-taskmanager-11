@@ -1,7 +1,11 @@
+import moment from "moment";
+
 const formatTime = (date) => {
-  const hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, 0);
-  return `${hours}:${minutes}`;
+  return moment(date).format(`hh:mm`);
+};
+
+const formatDate = (date) => {
+  return moment(date).format(`DD MMMM`);
 };
 
 const checkDate = (date) => {
@@ -34,4 +38,4 @@ const removeComponent = (component) => {
   component.removeElement();
 };
 
-export {formatTime, checkDate, createElement, render, replace, removeComponent};
+export {formatTime, formatDate, checkDate, createElement, render, replace, removeComponent};
