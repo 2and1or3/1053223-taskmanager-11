@@ -6,9 +6,11 @@ import NoTaskComponent from '../components/no-task.js';
 
 import CardController from './card-controller.js';
 
-import {render, removeComponent} from '../utils.js';
+import {render, removeComponent} from '../utils/render.js';
 
 const CARDS_STEP = 8;
+
+const DEFAULT_COLOR = `black`;
 
 const SORT_FUNCTIONS = {
   [SORT_TYPES.DATE_UP]: (leftTask, rightTask) => leftTask.dueDate - rightTask.dueDate,
@@ -17,20 +19,37 @@ const SORT_FUNCTIONS = {
 
 
 class BoardController {
-  constructor(container) {
+  constructor(container, tasksModel) {
     this._container = container;
-    this._initialTasks = null;
+    this._tasksModel = tasksModel;
     this._visibleCards = 0;
     this._visibleCardControllers = [];
+
     this._boardComponent = new BoardComponent();
     this._noTaskComponent = new NoTaskComponent();
     this._sortComponent = new SortComponent();
     this._cardsContainerComponent = new CardsContainerComponent();
     this._loadButtonComponent = new LoadButtonComponent();
+
+    this._onDataChange = this._onDataChange.bind(this);
+    this._onDataDelete = this._onDataDelete.bind(this);
+    this._onViewChange = this._onViewChange.bind(this);
+    this._onFilterChange = this._onFilterChange.bind(this);
+    this._loadButtonHandler = this._loadButtonHandler.bind(this);
+    this._sortClickHandler = this._sortClickHandler.bind(this);
+    this._rerenderBoard = this._rerenderBoard.bind(this);
+
+    this.createCard = this.createCard.bind(this);
+
+    this._sortComponent.setClickHandler(this._sortClickHandler);
+    this._tasksModel.addFilterChangeHandler(this._onFilterChange);
+    this._tasksModel.addDataChangeHandler(this._rerenderBoard);
   }
 
   _getSortedTasks(sortFuncKey) {
-    const sorted = this._initialTasks.slice(0);
+    const sorted = this._tasksModel
+                    .getTasks()
+                    .slice(0);
 
     sorted.sort(SORT_FUNCTIONS[sortFuncKey]);
 
@@ -45,21 +64,28 @@ class BoardController {
       currentTasks
         .slice(begin, end)
         .map((task) => {
-          const cardController = new CardController(this._cardsContainerComponent.getElement(), this._onDataChange.bind(this), this._onViewChange.bind(this));
+          const cardController =
+          new CardController(
+              this._cardsContainerComponent.getElement(),
+              this._onDataChange,
+              this._onViewChange,
+              this._onDataDelete);
+
           cardController.render(task);
 
           return cardController;
         });
+
     this._visibleCardControllers = this._visibleCardControllers.concat(newCardControllers);
   }
 
   _loadButtonHandler(evt) {
     evt.preventDefault();
     const addCardStep = () => this._visibleCards + CARDS_STEP;
+    const tasks = this._tasksModel.getTasks();
 
-    const isCardEnd = addCardStep() >= this._initialTasks.length;
-
-    const currentEnd = isCardEnd ? this._initialTasks.length : addCardStep();
+    const isCardEnd = addCardStep() >= tasks.length;
+    const currentEnd = isCardEnd ? tasks.length : addCardStep();
 
     const sortedTasks = this._getSortedTasks(this._sortComponent.getCurrentSortType());
 
@@ -72,31 +98,65 @@ class BoardController {
 
   _resetBoard() {
     this._visibleCards = 0;
+    this._visibleCardControllers.forEach((controller) => controller.destroy());
     this._visibleCardControllers = [];
-    this._cardsContainerComponent.getElement().innerHTML = ``;
     removeComponent(this._loadButtonComponent);
   }
 
+  _rerenderBoard() {
+    const filteredTasks = this._tasksModel.getTasks();
+    const quantityToLoad = this._visibleCards;
+    this._resetBoard();
+    this._loadMoreCards(0, quantityToLoad, filteredTasks);
+
+    this._renderLoadButton();
+  }
+
   _renderLoadButton() {
-    render(this._boardComponent.getElement(), this._loadButtonComponent);
-    this._loadButtonComponent.setClickHandler(this._loadButtonHandler.bind(this));
+    const tasks = this._tasksModel.getTasks();
+    const isMoreThanStep = tasks.length > CARDS_STEP;
+    const isMoreThanVisible = tasks.length > this._visibleCards;
+
+    if (isMoreThanStep && isMoreThanVisible) {
+      render(this._boardComponent.getElement(), this._loadButtonComponent);
+      this._loadButtonComponent.setClickHandler(this._loadButtonHandler);
+    }
+  }
+
+  _onDataDelete(id) {
+    this._tasksModel.deleteTask(id);
   }
 
   _onDataChange(newData) {
-    this._initialTasks[newData._innerId] = newData;
+    this._tasksModel.updateTask(newData);
 
-    const controllerIndex = this._visibleCardControllers.findIndex((controller) => controller.getId() === newData._innerId);
+    const controllerIndex = this._visibleCardControllers
+                              .findIndex((controller) => controller.getId() === newData.id);
 
-    this._visibleCardControllers[controllerIndex]
-      .updateRender(this._initialTasks[newData._innerId]);
+    this._visibleCardControllers[controllerIndex].updateRender(newData);
   }
-
 
   _onSortTypeChanged(sortKey) {
     const sortedTasks = this._getSortedTasks(sortKey);
     this._resetBoard();
     this._loadMoreCards(0, CARDS_STEP, sortedTasks);
     this._renderLoadButton();
+  }
+
+  _onFilterChange() {
+    const filteredTasks = this._tasksModel.getTasks();
+    const isMoreThanStep = filteredTasks.length > CARDS_STEP;
+    const quantityToLoad = isMoreThanStep ? CARDS_STEP : filteredTasks.length;
+
+    this._resetBoard();
+    this._loadMoreCards(0, quantityToLoad, filteredTasks);
+
+    this._renderLoadButton();
+  }
+
+  _onViewChange(evt) {
+    this._visibleCardControllers
+      .forEach((controller) => controller.setDefaultView(evt));
   }
 
   _sortClickHandler(evt) {
@@ -109,18 +169,31 @@ class BoardController {
     }
   }
 
-  _onViewChange(evt) {
-    this._visibleCardControllers
-      .forEach((controller) => controller.setDefaultView(evt));
+  _makeEmptyTask() {
+    const newTask = {
+      description: ``,
+      color: DEFAULT_COLOR,
+      dueDate: null,
+      repeatDays: {
+        mo: false,
+        tu: false,
+        we: false,
+        th: false,
+        fr: false,
+        sa: false,
+        su: false,
+      },
+      isArchive: false,
+      isFavorite: false,
+      id: this._tasksModel.getAllTasks().length,
+    };
+
+    return newTask;
   }
 
-  render(tasks) {
-    this._initialTasks = tasks.map((task, index) => {
-      task._innerId = index;
-      return task;
-    });
-
-    const isEmptyBoard = !this._initialTasks.length;
+  render() {
+    const tasks = this._tasksModel.getTasks();
+    const isEmptyBoard = !tasks.length;
 
     render(this._container, this._boardComponent);
 
@@ -134,9 +207,30 @@ class BoardController {
 
       const sortedTasks = this._getSortedTasks(this._sortComponent.getCurrentSortType());
       this._loadMoreCards(0, CARDS_STEP, sortedTasks);
-
-      this._sortComponent.setClickHandler(this._sortClickHandler.bind(this));
     }
+  }
+
+  createCard(evt) {
+    const emptyTask = this._makeEmptyTask();
+    this._resetBoard();
+
+    const cardController =
+    new CardController(
+        this._cardsContainerComponent.getElement(),
+        this._onDataChange,
+        this._onViewChange,
+        this._onDataDelete);
+
+    cardController.render(emptyTask);
+    cardController.onCreatingCard(evt);
+
+    this._visibleCardControllers = this._visibleCardControllers.concat(cardController);
+
+    const allTasks = this._tasksModel.getAllTasks();
+
+    this._loadMoreCards(1, CARDS_STEP, allTasks);
+    this._renderLoadButton();
+    this._tasksModel.addTask(emptyTask);
   }
 }
 

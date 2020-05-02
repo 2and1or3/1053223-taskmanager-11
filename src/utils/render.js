@@ -1,17 +1,3 @@
-import moment from "moment";
-
-const formatTime = (date) => {
-  return moment(date).format(`hh:mm`);
-};
-
-const formatDate = (date) => {
-  return moment(date).format(`DD MMMM`);
-};
-
-const checkDate = (date) => {
-  return date < Date.now();
-};
-
 const createElement = (template) => {
   const container = document.createElement(`div`);
   container.innerHTML = template;
@@ -38,4 +24,4 @@ const removeComponent = (component) => {
   component.removeElement();
 };
 
-export {formatTime, formatDate, checkDate, createElement, render, replace, removeComponent};
+export {createElement, render, replace, removeComponent};

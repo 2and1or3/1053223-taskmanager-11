@@ -1,7 +1,35 @@
 import CardEditorComponent from '../components/card-editor.js';
 import CardComponent from '../components/card.js';
 
-import {render, replace} from '../utils.js';
+import {render, replace, removeComponent} from '../utils/render.js';
+
+import {DAYS} from '../const.js';
+
+const parseForm = (form) => {
+  const formData = new FormData(form);
+
+  const repeatDaysContainer = form.querySelector(`.card__repeat-days`);
+  let repeatDaysObj = null;
+
+  if (repeatDaysContainer) {
+    const inputDays = Array.from(repeatDaysContainer.querySelectorAll(`input`));
+    repeatDaysObj = DAYS.reduce((obj, day, index) => {
+      obj[day] = inputDays[index].checked;
+      return obj;
+    }, {});
+  }
+
+  const date = formData.get(`date`);
+
+  const newTask = {
+    description: formData.get(`text`),
+    color: formData.get(`color`),
+    dueDate: date ? new Date(date) : null,
+    repeatDays: repeatDaysObj ? Object.assign({}, repeatDaysObj) : repeatDaysObj,
+  };
+
+  return newTask;
+};
 
 const PRESS_KEY = {
   ESC: 27,
@@ -14,19 +42,24 @@ const EDITOR_STATUS = {
 
 
 class CardController {
-  constructor(container, onDataChange, onViewChange) {
+  constructor(container, onDataChange, onViewChange, onDataDelete) {
     this._container = container;
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
+    this._onDataDelete = onDataDelete;
+    this._editorStatus = EDITOR_STATUS.CLOSED;
+
     this._cardComponent = null;
     this._cardEditorComponent = null;
+
     this._onEscPress = this._onEscPress.bind(this);
-    this._editorStatus = EDITOR_STATUS.CLOSED;
+
+    this.onCreatingCard = this.onCreatingCard.bind(this);
   }
 
   _onEscPress(evt) {
-    evt.preventDefault();
     const isEscPress = evt.keyCode === PRESS_KEY.ESC;
+
     if (isEscPress) {
       this._closeEditor(evt);
     }
@@ -51,33 +84,53 @@ class CardController {
     }
   }
 
+  _archiveHandler(task) {
+    const changedTask = {isArchive: !task.isArchive};
+
+    const newTask = Object.assign({}, task, changedTask);
+
+    this._onDataChange(newTask);
+  }
+
+  _favoriteHandler(task) {
+    const changedTask = {isFavorite: !task.isFavorite};
+
+    const newTask = Object.assign({}, task, changedTask);
+
+    this._onDataChange(newTask);
+  }
+
+  _deleteCard(evt) {
+    this._closeEditor(evt);
+    this._onDataDelete(this.getId());
+  }
+
+  _changeCard(task) {
+    const form = this._cardEditorComponent.getElement().querySelector(`.card__form`);
+    const changedTask = parseForm(form);
+
+    const newTask = Object.assign({}, task, changedTask);
+
+    this._onDataChange(newTask);
+  }
+
   _recoveryListeners(task) {
     const onEditClick = (evt) => this._openEditor(evt);
-    const onFormSubmit = (evt) => this._closeEditor(evt);
+    const onFormSubmit = (evt) => {
+      this._changeCard(task);
+      this._closeEditor(evt);
+    };
+    const onCardDelete = (evt) => this._deleteCard(evt);
 
     this._cardComponent.setEditClickHandler(onEditClick);
 
-    this._cardComponent.setArchiveClickHandler(() => {
-      const changedTask = {
-        isArchive: !task.isArchive,
-      };
+    this._cardComponent.setArchiveClickHandler(() => this._archiveHandler(task));
 
-      const newTask = Object.assign({}, task, changedTask);
-
-      this._onDataChange(newTask);
-    });
-
-    this._cardComponent.setFavoritesClickHandler(() => {
-      const changedTask = {
-        isFavorite: !task.isFavorite,
-      };
-
-      const newTask = Object.assign({}, task, changedTask);
-
-      this._onDataChange(newTask);
-    });
+    this._cardComponent.setFavoritesClickHandler(() => this._favoriteHandler(task));
 
     this._cardEditorComponent.setSubmitHandler(onFormSubmit);
+
+    this._cardEditorComponent.setDeleteHandler(onCardDelete);
   }
 
   render(task) {
@@ -93,7 +146,7 @@ class CardController {
   }
 
   getId() {
-    return this._cardComponent.getTask()._innerId;
+    return this._cardComponent.getTask().id;
   }
 
   updateRender(task) {
@@ -103,6 +156,15 @@ class CardController {
     this._cardComponent = updatedCardComponent;
 
     this._recoveryListeners(task);
+  }
+
+  destroy() {
+    removeComponent(this._cardComponent);
+    removeComponent(this._cardEditorComponent);
+  }
+
+  onCreatingCard(evt) {
+    this._openEditor(evt);
   }
 }
 

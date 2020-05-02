@@ -34,10 +34,15 @@ const generateTask = () => {
     },
     isArchive: Math.random() > 0.5,
     isFavorite: Math.random() > 0.5,
+    id: null,
   };
 };
 
-const generateTasks = (count) => Array(count).fill(``).map(generateTask);
+const generateTasks = (count) => Array(count).fill(``).map((task, index) => {
+  task = generateTask();
+  task.id = index;
+  return task;
+});
 
 const tasksData = generateTasks(CARD_COUNT);
 

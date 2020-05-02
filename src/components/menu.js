@@ -34,6 +34,11 @@ class Menu extends AbstractComponent {
     return createMenuTemplate();
   }
 
+  setNewTaskHandler(cb) {
+    this.getElement().querySelector(`.control__label--new-task`).addEventListener(`click`, (evt) => {
+      cb(evt);
+    });
+  }
 }
 
 export default Menu;
