@@ -1,4 +1,4 @@
-import {createElement} from '../utils.js';
+import {createElement} from '../utils/render.js';
 
 const METHODS_TO_IMPLEMENT = {
   GET_TEMPLATE: `getTemplate`,

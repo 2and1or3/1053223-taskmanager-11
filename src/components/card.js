@@ -1,4 +1,4 @@
-import {formatTime, checkDate, formatDate} from '../utils.js';
+import {formatTime, checkDate, formatDate, isRepeating} from '../utils/common.js';
 import AbstractComponent from './abstract-component.js';
 
 const BUTTON_NAMES = {
@@ -26,7 +26,7 @@ const createCardTemplate = function (task) {
   const date = isDateShowing ? formatDate(dueDate) : ``;
   const time = isDateShowing ? `${formatTime(dueDate)}` : ``;
 
-  const isRepeats = Object.values(repeatDays).some(Boolean);
+  const isRepeats = isRepeating(repeatDays);
   const repeatClass = isRepeats ? `card--repeat` : ``;
 
   const deadlineClass = isExpired ? `card--deadline` : ``;

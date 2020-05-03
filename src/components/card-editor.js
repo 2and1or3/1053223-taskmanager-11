@@ -1,12 +1,11 @@
 import {DAYS, COLORS} from '../const.js';
-import {formatTime, formatDate} from '../utils.js';
+import {formatTime, formatDate, isRepeating, checkDate} from '../utils/common.js';
 import AbstractSmartComponent from './abstract-smart-component.js';
 import flatpickr from "flatpickr";
+import he from "he";
 
 import "flatpickr/dist/flatpickr.min.css";
 
-
-const isRepeatingTask = (repeatDays) => Object.values(repeatDays).some(Boolean);
 
 const getRepeatDayTemplate = (day, isChecked) => {
   return (
@@ -41,10 +40,10 @@ const getColorTemplate = (color, isChecked) => {
 };
 
 const createCardEditorTemplate = function (task, options = {}) {
-  const {description, dueDate} = task;
-  const {isDateShowing, isRepeatTask, color, repeatDays} = options;
 
-  const isExpired = dueDate < Date.now();
+  const {isDateShowing, isRepeatTask, color, repeatDays, description, dueDate} = options;
+
+  const isExpired = checkDate(dueDate);
 
   const isDateExist = !!dueDate;
   const dateFieldText = isDateExist ? formatDate(dueDate) : ``;
@@ -53,7 +52,7 @@ const createCardEditorTemplate = function (task, options = {}) {
   const date = isDateShowing ? `${dateFieldText}` : ``;
   const time = isDateShowing ? `${timeFieldText}` : ``;
 
-  const isSaveButtonDisabled = (isDateShowing && !isDateExist) || (isRepeatTask && !isRepeatingTask(repeatDays));
+  const isSaveButtonDisabled = (isDateShowing && isDateExist) || (isRepeatTask && !isRepeating(repeatDays));
 
 
   const repeatClass = isRepeatTask ? `card--repeat` : ``;
@@ -147,11 +146,16 @@ class CardEditor extends AbstractSmartComponent {
   constructor(task) {
     super();
     this._task = task;
-    this._submitHandler = null;
     this._isDateShowing = !!task.dueDate;
-    this._isRepeat = isRepeatingTask(task.repeatDays);
+    this._currentDate = task.dueDate;
+    this._isRepeat = isRepeating(task.repeatDays);
     this._currentColor = task.color;
     this._currentRepeatDays = Object.assign({}, task.repeatDays);
+    this._description = task.description;
+
+    this._submitHandler = null;
+    this._deleteHandler = null;
+
     this._flatpickr = null;
 
     this._applyFlatpickr();
@@ -163,6 +167,17 @@ class CardEditor extends AbstractSmartComponent {
       this._isDateShowing = !this._isDateShowing;
       this.rerender();
     });
+  }
+
+  _setDateChangeHandler() {
+    const control = this.getElement().querySelector(`.card__date`);
+
+    if (control) {
+      control.addEventListener(`change`, (evt) => {
+        this._currentDate = new Date(evt.target.value);
+        // this.rerender();
+      });
+    }
   }
 
   _setRepeatClickHandler() {
@@ -193,6 +208,16 @@ class CardEditor extends AbstractSmartComponent {
     });
   }
 
+  _setTextChangeHandler() {
+    const control = this.getElement().querySelector(`.card__text`);
+
+    control.addEventListener(`input`, (evt) => {
+      const description = he.encode(evt.target.value);
+
+      this._description = description;
+    });
+  }
+
   _applyFlatpickr() {
     if (this._flatpickr) {
       this._flatpickr.destroy();
@@ -206,6 +231,7 @@ class CardEditor extends AbstractSmartComponent {
         allowInput: true,
         defaultDate: this._task.dueDate || `today`,
       };
+
       this._flatpickr = flatpickr(inputDate, options);
     }
   }
@@ -216,6 +242,8 @@ class CardEditor extends AbstractSmartComponent {
       isRepeatTask: this._isRepeat,
       color: this._currentColor,
       repeatDays: this._currentRepeatDays,
+      description: this._description,
+      dueDate: this._currentDate,
     };
 
     return createCardEditorTemplate(this._task, options);
@@ -223,10 +251,11 @@ class CardEditor extends AbstractSmartComponent {
 
   reset() {
     this._isDateShowing = !!this._task.dueDate;
-    this._isRepeat = isRepeatingTask(this._task.repeatDays);
+    this._currentDate = this._task.dueDate;
+    this._isRepeat = isRepeating(this._task.repeatDays);
     this._currentColor = this._task.color;
     this._currentRepeatDays = Object.assign({}, this._task.repeatDays);
-
+    this._description = this._task.description;
     this.rerender();
   }
 
@@ -235,17 +264,25 @@ class CardEditor extends AbstractSmartComponent {
     this._applyFlatpickr();
   }
 
-  recoveryListeners() {
-    this._setDateClickHandler();
-    this._setRepeatClickHandler();
-    this._setColorClickHandler();
-    this._setRepeatChangeHandler();
-    this.setSubmitHandler(this._submitHandler);
-  }
-
   setSubmitHandler(cb) {
     this.getElement().querySelector(`form`).addEventListener(`submit`, cb);
     this._submitHandler = cb;
+  }
+
+  setDeleteHandler(cb) {
+    this.getElement().querySelector(`.card__delete`).addEventListener(`click`, cb);
+    this._deleteHandler = cb;
+  }
+
+  recoveryListeners() {
+    this._setDateClickHandler();
+    this._setDateChangeHandler();
+    this._setRepeatClickHandler();
+    this._setColorClickHandler();
+    this._setRepeatChangeHandler();
+    this._setTextChangeHandler();
+    this.setSubmitHandler(this._submitHandler);
+    this.setDeleteHandler(this._deleteHandler);
   }
 }
 

@@ -12,7 +12,6 @@ const replaceElements = (newElement, oldElement) => {
 };
 
 class AbstractSmartComponent extends AbstractComponent {
-
   recoveryListeners() {
     throw new Error(ERRORS.getImplementMessage(METHODS_TO_IMPLEMENT.RECOVERY_LISTENERS));
   }
@@ -26,8 +25,6 @@ class AbstractSmartComponent extends AbstractComponent {
 
     this.recoveryListeners();
   }
-
-
 }
 
 export default AbstractSmartComponent;
