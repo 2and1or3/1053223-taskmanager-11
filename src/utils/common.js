@@ -13,4 +13,6 @@ const isToday = (date) => {
 
 const isRepeating = (repeatDays) => repeatDays ? Object.values(repeatDays).some(Boolean) : repeatDays;
 
-export {formatTime, formatDate, checkDate, isToday, isRepeating};
+const parsePrefixId = (prefix, id) => id.slice(prefix.length);
+
+export {formatTime, formatDate, checkDate, isToday, isRepeating, parsePrefixId};

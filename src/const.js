@@ -25,4 +25,9 @@ const FILTER_TYPES = {
   ARCHIVE: `archive`,
 };
 
-export {MONTH_NAMES, DAYS, COLORS, FILTER_TYPES};
+const MENU_IDS = {
+  TASKS: `task`,
+  STATISTIC: `statistic`,
+};
+
+export {MONTH_NAMES, DAYS, COLORS, FILTER_TYPES, MENU_IDS};

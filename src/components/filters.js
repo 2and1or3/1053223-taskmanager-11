@@ -1,7 +1,9 @@
 import AbstractComponent from './abstract-component.js';
 
+import {parsePrefixId} from '../utils/common.js';
+
 const FILTER_ID_PREFIX = `filter__`;
-const getFilterId = (id) => id.slice(FILTER_ID_PREFIX.length);
+// const getFilterId = (id) => id.slice(FILTER_ID_PREFIX.length);
 
 const createFilterMarkup = function (filter, key, isChecked) {
   const {title, count} = filter;
@@ -49,7 +51,7 @@ class Filters extends AbstractComponent {
     const container = this.getElement();
 
     container.addEventListener(`change`, (evt) => {
-      const currentFilter = getFilterId(evt.target.id);
+      const currentFilter = parsePrefixId(FILTER_ID_PREFIX, evt.target.id);
       onFilterChange(currentFilter);
     });
   }

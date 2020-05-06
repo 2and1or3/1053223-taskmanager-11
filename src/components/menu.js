@@ -1,5 +1,9 @@
 import AbstractComponent from './abstract-component.js';
 
+import {parsePrefixId} from '../utils/common.js';
+
+const MENU_PREFIX_ID = `control__`;
+
 const createMenuTemplate = () => {
   return (
     `<section class="control__btn-wrap">
@@ -32,6 +36,17 @@ const createMenuTemplate = () => {
 class Menu extends AbstractComponent {
   getTemplate() {
     return createMenuTemplate();
+  }
+
+  setChangeScreenHandler(cb) {
+    const container = this.getElement();
+
+    container.addEventListener(`click`, (evt) => {
+      if (evt.target.tagName === `INPUT`) {
+        const id = parsePrefixId(MENU_PREFIX_ID, evt.target.id);
+        cb(id);
+      }
+    });
   }
 
   setNewTaskHandler(cb) {

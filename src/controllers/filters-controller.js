@@ -88,6 +88,12 @@ class FiltersController {
       replace(this._filtersComponent, oldComponent);
     }
   }
+
+  resetFilterType() {
+    this._currentFilter = FILTER_TYPES.ALL;
+    this._tasksModel.setCurrentFilter(this._currentFilter);
+    this.render();
+  }
 }
 
 export default FiltersController;
