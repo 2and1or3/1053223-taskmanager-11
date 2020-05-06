@@ -31,8 +31,8 @@ const createCardTemplate = function (task) {
 
   const deadlineClass = isExpired ? `card--deadline` : ``;
   const buttonEdit = createButtonMarkup(BUTTON_NAMES.EDIT, true);
-  const buttonArchive = createButtonMarkup(BUTTON_NAMES.ARCHIVE, !isArchive);
-  const buttonFavorite = createButtonMarkup(BUTTON_NAMES.FAVORITES, !isFavorite);
+  const buttonArchive = createButtonMarkup(BUTTON_NAMES.ARCHIVE, isArchive);
+  const buttonFavorite = createButtonMarkup(BUTTON_NAMES.FAVORITES, isFavorite);
 
   return (
     `<article class="card card--${color} ${repeatClass} ${deadlineClass}">

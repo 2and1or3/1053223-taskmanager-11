@@ -132,8 +132,9 @@ class BoardController {
 
     const controllerIndex = this._visibleCardControllers
                               .findIndex((controller) => controller.getId() === newData.id);
-
-    this._visibleCardControllers[controllerIndex].updateRender(newData);
+    if (controllerIndex !== -1) {
+      this._visibleCardControllers[controllerIndex].updateRender(newData);
+    }
   }
 
   _onSortTypeChanged(sortKey) {
@@ -231,6 +232,14 @@ class BoardController {
     this._loadMoreCards(1, CARDS_STEP, allTasks);
     this._renderLoadButton();
     this._tasksModel.addTask(emptyTask);
+  }
+
+  hide() {
+    this._boardComponent.hide();
+  }
+
+  show() {
+    this._boardComponent.show();
   }
 }
 

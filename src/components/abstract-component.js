@@ -34,6 +34,14 @@ class AbstractComponent {
   removeElement() {
     this._element = null;
   }
+
+  hide() {
+    this.getElement().classList.add(`hide`);
+  }
+
+  show() {
+    this.getElement().classList.remove(`hide`);
+  }
 }
 
 export default AbstractComponent;
