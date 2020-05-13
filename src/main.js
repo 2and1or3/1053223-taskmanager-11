@@ -4,11 +4,13 @@ import StatisticComponent from './components/statistic.js';
 import BoardController from './controllers/board-controller.js';
 import FiltersController from './controllers/filters-controller.js';
 
+import API from './api.js';
 import TasksModel from './models/tasks.js';
 
 import {render} from './utils/render.js';
-import {tasksData} from './mock/task.js';
 import {MENU_IDS} from './const.js';
+
+const TOKEN = `Basic eo0w590ik2988asdf1a`;
 
 const onScreenChange = (id) => {
   switch (id) {
@@ -34,27 +36,35 @@ const mainControl = main.querySelector(`.control`);
 
 
 const menuComponent = new MenuComponent();
-render(mainControl, menuComponent);
 
+const api = new API(TOKEN);
 const tasksModel = new TasksModel();
-tasksModel.setTasks(tasksData);
-
 const filtersController = new FiltersController(main, tasksModel);
+const statisticComponent = new StatisticComponent(tasksModel);
+const boardController = new BoardController(main, tasksModel, api);
+
+render(mainControl, menuComponent);
 filtersController.render();
 
-
-const statisticComponent = new StatisticComponent(tasksModel.getAllTasks());
-render(main, statisticComponent);
-statisticComponent.hide();
+boardController.renderStateOnFirstLoad();
 
 
-const boardController = new BoardController(main, tasksModel);
-boardController.render();
+api.getTasks()
+.then((tasks) => tasksModel.setTasks(tasks))
+.then(() => {
+  render(main, statisticComponent);
+  statisticComponent.hide();
 
 
-menuComponent.setNewTaskHandler((evt) => {
-  filtersController.resetFilterType();
-  boardController.createCard(evt);
+  boardController.render();
+
+  menuComponent.setNewTaskHandler((evt) => {
+    filtersController.resetFilterType();
+    boardController.createCard(evt);
+  });
+})
+.catch(() => {
+  tasksModel.setTasks([]);
 });
 
 menuComponent.setChangeScreenHandler(onScreenChange);
