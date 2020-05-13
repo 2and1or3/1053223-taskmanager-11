@@ -64,9 +64,9 @@ const createStatisticTemplate = () => {
 };
 
 class Statistic extends AbstractComponent {
-  constructor(tasks) {
+  constructor(tasksModel) {
     super();
-    this._tasks = tasks.slice();
+    this._tasks = tasksModel.getAllTasks().slice();
     this._dateTo = moment(new Date()).format(FLATPICKR_FORMAT);
     this._dateFrom = moment(this._dateTo).add(-LENGTH_PERIOD, `days`).format(FLATPICKR_FORMAT);
 
@@ -198,7 +198,22 @@ class Statistic extends AbstractComponent {
   }
 
   renderCharts() {
-    const tasksByRange = this._tasks.filter((task) => (new Date(this._dateFrom) <= task.dueDate && task.dueDate <= new Date(this._dateTo)));
+
+    const dateFrom = new Date(this._dateFrom);
+    const dateTo = new Date(this._dateTo);
+
+    const tasksByRange =
+    this._tasks
+    .filter((task) => {
+      const isDateExist = !!task.dueDate;
+      if (isDateExist) {
+        const isInRange = (dateFrom.getDate() <= task.dueDate.getDate() && task.dueDate.getDate() <= dateTo.getDate());
+        return isInRange;
+      }
+
+      return false;
+    });
+
 
     const tasksByDay = {};
     const tasksByColor = {};

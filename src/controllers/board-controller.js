@@ -3,6 +3,7 @@ import LoadButtonComponent from '../components/load-button.js';
 import BoardComponent from '../components/board.js';
 import CardsContainerComponent from '../components/cards-container.js';
 import NoTaskComponent from '../components/no-task.js';
+import LoadStateComponent from '../components/load-state.js';
 
 import CardController from './card-controller.js';
 
@@ -19,14 +20,16 @@ const SORT_FUNCTIONS = {
 
 
 class BoardController {
-  constructor(container, tasksModel) {
+  constructor(container, tasksModel, api) {
     this._container = container;
     this._tasksModel = tasksModel;
+    this._api = api;
     this._visibleCards = 0;
     this._visibleCardControllers = [];
 
     this._boardComponent = new BoardComponent();
     this._noTaskComponent = new NoTaskComponent();
+    this._loadStateComponent = new LoadStateComponent();
     this._sortComponent = new SortComponent();
     this._cardsContainerComponent = new CardsContainerComponent();
     this._loadButtonComponent = new LoadButtonComponent();
@@ -128,13 +131,17 @@ class BoardController {
   }
 
   _onDataChange(newData) {
-    this._tasksModel.updateTask(newData);
+    const updateTaskPromise = this._api.updateTask(newData);
 
-    const controllerIndex = this._visibleCardControllers
-                              .findIndex((controller) => controller.getId() === newData.id);
-    if (controllerIndex !== -1) {
-      this._visibleCardControllers[controllerIndex].updateRender(newData);
-    }
+    updateTaskPromise.then((updatedTask) => {
+      this._tasksModel.updateTask(updatedTask);
+
+      const controllerIndex = this._visibleCardControllers
+                                .findIndex((controller) => controller.getId() === updatedTask.id);
+      if (controllerIndex !== -1) {
+        this._visibleCardControllers[controllerIndex].updateRender(updatedTask);
+      }
+    });
   }
 
   _onSortTypeChanged(sortKey) {
@@ -193,10 +200,11 @@ class BoardController {
   }
 
   render() {
+    removeComponent(this._loadStateComponent);
+
     const tasks = this._tasksModel.getTasks();
     const isEmptyBoard = !tasks.length;
 
-    render(this._container, this._boardComponent);
 
     if (isEmptyBoard) {
       render(this._boardComponent.getElement(), this._noTaskComponent);
@@ -240,6 +248,11 @@ class BoardController {
 
   show() {
     this._boardComponent.show();
+  }
+
+  renderStateOnFirstLoad() {
+    render(this._container, this._boardComponent);
+    render(this._boardComponent.getElement(), this._loadStateComponent);
   }
 }
 
