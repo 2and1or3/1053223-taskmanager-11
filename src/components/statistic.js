@@ -68,11 +68,12 @@ class Statistic extends AbstractComponent {
     super();
     this._tasks = tasksModel.getAllTasks().slice();
     this._dateTo = moment(new Date()).format(FLATPICKR_FORMAT);
-    this._dateFrom = moment(this._dateTo).add(-LENGTH_PERIOD, `days`).format(FLATPICKR_FORMAT);
+    this._dateFrom = moment(this._dateTo)
+                      .add(-LENGTH_PERIOD, `days`)
+                      .format(FLATPICKR_FORMAT);
 
     this._daysChart = null;
     this._colorsChart = null;
-
 
     this._flatpickr = null;
 
@@ -182,6 +183,7 @@ class Statistic extends AbstractComponent {
 
   _onPeriodChange() {
     const periodControl = this.getElement().querySelector(`.statistic__period-input`);
+
     periodControl.addEventListener(`change`, (evt) => {
       const range = parseRangeByFormat(evt.target.value, FLATPICKR_FORMAT);
 
@@ -198,16 +200,19 @@ class Statistic extends AbstractComponent {
   }
 
   renderCharts() {
-
     const dateFrom = new Date(this._dateFrom);
     const dateTo = new Date(this._dateTo);
 
     const tasksByRange =
     this._tasks
     .filter((task) => {
+
       const isDateExist = !!task.dueDate;
       if (isDateExist) {
-        const isInRange = (dateFrom.getDate() <= task.dueDate.getDate() && task.dueDate.getDate() <= dateTo.getDate());
+        const isInRange =
+          dateFrom.getDate() <= task.dueDate.getDate() &&
+          task.dueDate.getDate() <= dateTo.getDate();
+
         return isInRange;
       }
 
@@ -220,13 +225,20 @@ class Statistic extends AbstractComponent {
 
     for (let i = 0; i <= LENGTH_PERIOD; i++) {
       let currentDay = moment(this._dateFrom).add(i, `days`).format(`DD.MM`);
-      let tasksFromDay = tasksByRange.filter((task) => (moment(task.dueDate).format(`DD.MM`) === currentDay) && task.isArchive);
+
+      let tasksFromDay =
+        tasksByRange
+        .filter((task) => (moment(task.dueDate).format(`DD.MM`) === currentDay) && task.isArchive);
+
       tasksByDay[currentDay] = tasksFromDay.length;
     }
 
     for (let i = 0; i < COLORS.length; i++) {
       let currentColor = COLORS[i];
-      let tasksFromColor = tasksByRange.filter((task) => task.color === currentColor && task.isArchive);
+      let tasksFromColor =
+        tasksByRange
+        .filter((task) => task.color === currentColor && task.isArchive);
+
       tasksByColor[currentColor] = tasksFromColor.length;
     }
 

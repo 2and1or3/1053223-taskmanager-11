@@ -7,7 +7,8 @@ import LoadStateComponent from '../components/load-state.js';
 
 import CardController from './card-controller.js';
 
-import {render, removeComponent} from '../utils/render.js';
+import {render, removeComponent, RENDER_POSITIONS} from '../utils/render.js';
+import {REDACTOR_STATES} from '../const.js';
 
 const CARDS_STEP = 8;
 
@@ -41,8 +42,7 @@ class BoardController {
     this._loadButtonHandler = this._loadButtonHandler.bind(this);
     this._sortClickHandler = this._sortClickHandler.bind(this);
     this._rerenderBoard = this._rerenderBoard.bind(this);
-
-    this.createCard = this.createCard.bind(this);
+    this._onDataAdd = this._onDataAdd.bind(this);
 
     this._sortComponent.setClickHandler(this._sortClickHandler);
     this._tasksModel.addFilterChangeHandler(this._onFilterChange);
@@ -72,7 +72,8 @@ class BoardController {
               this._cardsContainerComponent.getElement(),
               this._onDataChange,
               this._onViewChange,
-              this._onDataDelete);
+              this._onDataDelete,
+              this._onDataAdd);
 
           cardController.render(task);
 
@@ -100,6 +101,7 @@ class BoardController {
   }
 
   _resetBoard() {
+    this._noTaskComponent.getElement().remove();
     this._visibleCards = 0;
     this._visibleCardControllers.forEach((controller) => controller.destroy());
     this._visibleCardControllers = [];
@@ -110,9 +112,15 @@ class BoardController {
     const filteredTasks = this._tasksModel.getTasks();
     const quantityToLoad = this._visibleCards;
     this._resetBoard();
-    this._loadMoreCards(0, quantityToLoad, filteredTasks);
 
-    this._renderLoadButton();
+    const isEmptyBoard = !filteredTasks.length;
+
+    if (isEmptyBoard) {
+      render(this._cardsContainerComponent.getElement(), this._noTaskComponent, RENDER_POSITIONS.BEFORE);
+    } else {
+      this._loadMoreCards(0, quantityToLoad, filteredTasks);
+      this._renderLoadButton();
+    }
   }
 
   _renderLoadButton() {
@@ -127,21 +135,82 @@ class BoardController {
   }
 
   _onDataDelete(id) {
-    this._tasksModel.deleteTask(id);
+    const currentController = this._visibleCardControllers
+                                .find((controller) => controller.getId() === id);
+
+    if (currentController) {
+      currentController.disableForm(REDACTOR_STATES.DELETE);
+    }
+
+    if (Math.random() > 0.8) {
+      id = -1000;
+    }
+
+    setTimeout(() => {
+      this._api.deleteTask(id)
+      .then((isOk) => {
+
+        if (isOk) {
+          this._tasksModel.deleteTask(id);
+        }
+      })
+      .catch(() => {
+        currentController.onError();
+      });
+    }, 500);
   }
 
   _onDataChange(newData) {
-    const updateTaskPromise = this._api.updateTask(newData);
+    const currentController = this._visibleCardControllers
+                                .find((controller) => controller.getId() === newData.id);
 
-    updateTaskPromise.then((updatedTask) => {
-      this._tasksModel.updateTask(updatedTask);
+    if (currentController) {
+      currentController.disableForm(REDACTOR_STATES.SAVE);
+    }
 
-      const controllerIndex = this._visibleCardControllers
-                                .findIndex((controller) => controller.getId() === updatedTask.id);
-      if (controllerIndex !== -1) {
-        this._visibleCardControllers[controllerIndex].updateRender(updatedTask);
-      }
-    });
+    if (Math.random() > 0.8) {
+      newData.id = 50;
+    }
+
+    setTimeout(() => {
+      this._api.updateTask(newData)
+      .then((updatedTask) => {
+
+        this._tasksModel.updateTask(updatedTask);
+
+        if (currentController) {
+          currentController.updateRender(updatedTask);
+        }
+      })
+      .catch(() => {
+        currentController.onError();
+      });
+    }, 500);
+  }
+
+  _onDataAdd(newTask) {
+    const currentController = this._visibleCardControllers
+                                .find((controller) => controller.getId() === newTask.id);
+
+    if (currentController) {
+      currentController.disableForm(REDACTOR_STATES.SAVE);
+    }
+
+    setTimeout(() => {
+      this._api.createTask(newTask)
+      .then((task) => {
+        this._tasksModel.addTask(task);
+        currentController.setIsEmptyCard(false);
+        this._resetBoard();
+        const allTasks = this._tasksModel.getAllTasks();
+
+        this._loadMoreCards(0, CARDS_STEP, allTasks);
+        this._renderLoadButton();
+      })
+      .catch(() => {
+        currentController.onError();
+      });
+    }, 500);
   }
 
   _onSortTypeChanged(sortKey) {
@@ -156,10 +225,16 @@ class BoardController {
     const isMoreThanStep = filteredTasks.length > CARDS_STEP;
     const quantityToLoad = isMoreThanStep ? CARDS_STEP : filteredTasks.length;
 
-    this._resetBoard();
-    this._loadMoreCards(0, quantityToLoad, filteredTasks);
+    const isEmptyBoard = !filteredTasks.length;
 
-    this._renderLoadButton();
+    this._resetBoard();
+
+    if (isEmptyBoard) {
+      render(this._cardsContainerComponent.getElement(), this._noTaskComponent, `before`);
+    } else {
+      this._loadMoreCards(0, quantityToLoad, filteredTasks);
+      this._renderLoadButton();
+    }
   }
 
   _onViewChange(evt) {
@@ -208,6 +283,7 @@ class BoardController {
 
     if (isEmptyBoard) {
       render(this._boardComponent.getElement(), this._noTaskComponent);
+      render(this._boardComponent.getElement(), this._cardsContainerComponent);
     } else {
       render(this._boardComponent.getElement(), this._sortComponent);
       render(this._boardComponent.getElement(), this._cardsContainerComponent);
@@ -228,7 +304,8 @@ class BoardController {
         this._cardsContainerComponent.getElement(),
         this._onDataChange,
         this._onViewChange,
-        this._onDataDelete);
+        this._onDataDelete,
+        this._onDataAdd);
 
     cardController.render(emptyTask);
     cardController.onCreatingCard(evt);
@@ -237,9 +314,8 @@ class BoardController {
 
     const allTasks = this._tasksModel.getAllTasks();
 
-    this._loadMoreCards(1, CARDS_STEP, allTasks);
+    this._loadMoreCards(0, CARDS_STEP, allTasks);
     this._renderLoadButton();
-    this._tasksModel.addTask(emptyTask);
   }
 
   hide() {

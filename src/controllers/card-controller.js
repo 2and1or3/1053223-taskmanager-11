@@ -5,14 +5,28 @@ import {render, replace, removeComponent} from '../utils/render.js';
 
 import {DAYS} from '../const.js';
 
+const PRESS_KEY = {
+  ESC: 27,
+};
+
+const EDITOR_STATUS = {
+  OPENED: `opened`,
+  CLOSED: `closed`,
+};
+
 const parseForm = (form) => {
   const formData = new FormData(form);
 
   const repeatDaysContainer = form.querySelector(`.card__repeat-days`);
-  let repeatDaysObj = null;
+  let repeatDaysObj = {};
+
+  DAYS.forEach((day) => {
+    repeatDaysObj[day] = false;
+  });
 
   if (repeatDaysContainer) {
     const inputDays = Array.from(repeatDaysContainer.querySelectorAll(`input`));
+
     repeatDaysObj = DAYS.reduce((obj, day, index) => {
       obj[day] = inputDays[index].checked;
       return obj;
@@ -25,35 +39,26 @@ const parseForm = (form) => {
     description: formData.get(`text`),
     color: formData.get(`color`),
     dueDate: date ? new Date(date) : null,
-    repeatDays: repeatDaysObj ? Object.assign({}, repeatDaysObj) : repeatDaysObj,
+    repeatDays: repeatDaysObj,
   };
 
   return newTask;
 };
 
-const PRESS_KEY = {
-  ESC: 27,
-};
-
-const EDITOR_STATUS = {
-  OPENED: `opened`,
-  CLOSED: `closed`,
-};
-
-
 class CardController {
-  constructor(container, onDataChange, onViewChange, onDataDelete) {
+  constructor(container, onDataChange, onViewChange, onDataDelete, onDataAdd) {
     this._container = container;
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
     this._onDataDelete = onDataDelete;
+    this._onDataAdd = onDataAdd;
     this._editorStatus = EDITOR_STATUS.CLOSED;
+    this._isEmptyCard = false;
 
     this._cardComponent = null;
     this._cardEditorComponent = null;
 
     this._onEscPress = this._onEscPress.bind(this);
-
     this.onCreatingCard = this.onCreatingCard.bind(this);
   }
 
@@ -65,10 +70,7 @@ class CardController {
     }
   }
 
-  _openEditor(evt) {
-    evt.preventDefault();
-    this._onViewChange(evt);
-
+  _openEditor() {
     this._editorStatus = EDITOR_STATUS.OPENED;
     replace(this._cardEditorComponent, this._cardComponent);
     document.addEventListener(`keydown`, this._onEscPress);
@@ -81,27 +83,22 @@ class CardController {
       replace(this._cardComponent, this._cardEditorComponent);
       document.removeEventListener(`keydown`, this._onEscPress);
       this._editorStatus = EDITOR_STATUS.CLOSED;
+
+      if (this._isEmptyCard) {
+        this.destroy();
+      }
     }
   }
 
-  _archiveHandler(task) {
-    const changedTask = {isArchive: !task.isArchive};
+  _changeCardState(property, task) {
+    const changedTask = {[property]: !task[property]};
 
     const newTask = Object.assign({}, task, changedTask);
 
     this._onDataChange(newTask);
   }
 
-  _favoriteHandler(task) {
-    const changedTask = {isFavorite: !task.isFavorite};
-
-    const newTask = Object.assign({}, task, changedTask);
-
-    this._onDataChange(newTask);
-  }
-
-  _deleteCard(evt) {
-    this._closeEditor(evt);
+  _deleteCard() {
     this._onDataDelete(this.getId());
   }
 
@@ -110,23 +107,38 @@ class CardController {
     const changedTask = parseForm(form);
 
     const newTask = Object.assign({}, task, changedTask);
-
     this._onDataChange(newTask);
   }
 
+  _addCard(task) {
+    const form = this._cardEditorComponent.getElement().querySelector(`.card__form`);
+    const changedTask = parseForm(form);
+
+    const newTask = Object.assign({}, task, changedTask);
+    this._onDataAdd(newTask);
+  }
+
   _recoveryListeners(task) {
-    const onEditClick = (evt) => this._openEditor(evt);
-    const onFormSubmit = (evt) => {
-      this._changeCard(task);
-      this._closeEditor(evt);
+    const onEditClick = (evt) => {
+      evt.preventDefault();
+      this._onViewChange(evt);
+      this._openEditor();
+    };
+
+    const onFormSubmit = () => {
+      if (this._isEmptyCard) {
+        this._addCard(task);
+      } else {
+        this._changeCard(task);
+      }
     };
     const onCardDelete = (evt) => this._deleteCard(evt);
 
     this._cardComponent.setEditClickHandler(onEditClick);
 
-    this._cardComponent.setArchiveClickHandler(() => this._archiveHandler(task));
+    this._cardComponent.setArchiveClickHandler(() => this._changeCardState(`isArchive`, task));
 
-    this._cardComponent.setFavoritesClickHandler(() => this._favoriteHandler(task));
+    this._cardComponent.setFavoritesClickHandler(() => this._changeCardState(`isFavorite`, task));
 
     this._cardEditorComponent.setSubmitHandler(onFormSubmit);
 
@@ -164,7 +176,23 @@ class CardController {
   }
 
   onCreatingCard(evt) {
-    this._openEditor(evt);
+    evt.preventDefault();
+    this._onViewChange(evt);
+    this._openEditor();
+    this._isEmptyCard = true;
+  }
+
+  disableForm(state) {
+    this._cardEditorComponent.disableForm(state);
+  }
+
+  onError() {
+    this._cardEditorComponent.reset();
+    this._cardEditorComponent.shake();
+  }
+
+  setIsEmptyCard(boolean) {
+    this._isEmptyCard = boolean;
   }
 }
 

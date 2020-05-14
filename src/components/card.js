@@ -1,5 +1,7 @@
-import {formatTime, checkDate, formatDate, isRepeating} from '../utils/common.js';
 import AbstractComponent from './abstract-component.js';
+
+import {formatTime, checkDate, formatDate, isRepeating} from '../utils/common.js';
+import {CARD_CLASS} from '../const.js';
 
 const BUTTON_NAMES = {
   EDIT: `edit`,
@@ -7,8 +9,13 @@ const BUTTON_NAMES = {
   FAVORITES: `favorites`,
 };
 
+const CARD_STATES = {
+  FAVORITE: `Favoriting...`,
+  ARCHIVE: `Archiving...`,
+};
+
 const createButtonMarkup = (name, isActive) => {
-  const activeClass = isActive ? `` : `card__btn--disabled`;
+  const activeClass = isActive ? `` : CARD_CLASS.BTN_DISABLED;
 
   return (
     `<button type="button" class="card__btn card__btn--${name} ${activeClass}">
@@ -21,15 +28,16 @@ const createCardTemplate = function (task) {
   const {color, description, dueDate, repeatDays, isArchive, isFavorite} = task;
 
   const isExpired = checkDate(dueDate);
-  const isDateShowing = !!dueDate;
+  const deadlineClass = isExpired ? CARD_CLASS.DEADLINE : ``;
 
+
+  const isDateShowing = !!dueDate;
   const date = isDateShowing ? formatDate(dueDate) : ``;
-  const time = isDateShowing ? `${formatTime(dueDate)}` : ``;
+  const time = isDateShowing ? formatTime(dueDate) : ``;
 
   const isRepeats = isRepeating(repeatDays);
-  const repeatClass = isRepeats ? `card--repeat` : ``;
+  const repeatClass = isRepeats ? CARD_CLASS.REPEAT : ``;
 
-  const deadlineClass = isExpired ? `card--deadline` : ``;
   const buttonEdit = createButtonMarkup(BUTTON_NAMES.EDIT, true);
   const buttonArchive = createButtonMarkup(BUTTON_NAMES.ARCHIVE, isArchive);
   const buttonFavorite = createButtonMarkup(BUTTON_NAMES.FAVORITES, isFavorite);
@@ -91,11 +99,21 @@ class Card extends AbstractComponent {
   }
 
   setArchiveClickHandler(cb) {
-    this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.ARCHIVE}`).addEventListener(`click`, cb);
+    const archiveButton = this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.ARCHIVE}`);
+
+    archiveButton.addEventListener(`click`, (evt) => {
+      archiveButton.textContent = CARD_STATES.ARCHIVE;
+      cb(evt);
+    });
   }
 
   setFavoritesClickHandler(cb) {
-    this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.FAVORITES}`).addEventListener(`click`, cb);
+    const favoriteButton = this.getElement().querySelector(`.card__btn--${BUTTON_NAMES.FAVORITES}`);
+
+    favoriteButton.addEventListener(`click`, (evt) => {
+      favoriteButton.textContent = CARD_STATES.FAVORITE;
+      cb(evt);
+    });
   }
 }
 

@@ -30,4 +30,15 @@ const MENU_IDS = {
   STATISTIC: `statistic`,
 };
 
-export {MONTH_NAMES, DAYS, COLORS, FILTER_TYPES, MENU_IDS};
+const REDACTOR_STATES = {
+  SAVE: `Saving...`,
+  DELETE: `Deleting...`,
+};
+
+const CARD_CLASS = {
+  REPEAT: `card--repeat`,
+  DEADLINE: `card--deadline`,
+  BTN_DISABLED: `card__btn--disabled`
+};
+
+export {MONTH_NAMES, DAYS, COLORS, FILTER_TYPES, MENU_IDS, REDACTOR_STATES, CARD_CLASS};

@@ -50,9 +50,7 @@ class Menu extends AbstractComponent {
   }
 
   setNewTaskHandler(cb) {
-    this.getElement().querySelector(`.control__label--new-task`).addEventListener(`click`, (evt) => {
-      cb(evt);
-    });
+    this.getElement().querySelector(`.control__label--new-task`).addEventListener(`click`, cb);
   }
 }
 

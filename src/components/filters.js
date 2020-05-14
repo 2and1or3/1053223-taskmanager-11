@@ -3,11 +3,11 @@ import AbstractComponent from './abstract-component.js';
 import {parsePrefixId} from '../utils/common.js';
 
 const FILTER_ID_PREFIX = `filter__`;
-// const getFilterId = (id) => id.slice(FILTER_ID_PREFIX.length);
 
 const createFilterMarkup = function (filter, key, isChecked) {
   const {title, count} = filter;
   const check = isChecked ? `checked` : ``;
+  const isDisabledInput = count <= 0;
 
   return (
     `<input
@@ -15,7 +15,9 @@ const createFilterMarkup = function (filter, key, isChecked) {
       id="filter__${key}"
       class="filter__input visually-hidden"
       name="filter"
-      ${check}/>
+      ${check}
+      ${isDisabledInput ? `disabled` : ``}
+      />
     <label for="filter__${key}" class="filter__label">
       ${title} <span class="filter__${key}-count">${+count}</span></label>`
   );

@@ -1,4 +1,4 @@
-import {DAYS, COLORS} from '../const.js';
+import {DAYS, COLORS, REDACTOR_STATES, CARD_CLASS} from '../const.js';
 import {formatTime, formatDate, isRepeating, checkDate} from '../utils/common.js';
 import AbstractSmartComponent from './abstract-smart-component.js';
 import flatpickr from "flatpickr";
@@ -6,6 +6,11 @@ import he from "he";
 
 import "flatpickr/dist/flatpickr.min.css";
 
+
+const DESCRIPTION_LENGTH = {
+  MIN: 1,
+  MAX: 140,
+};
 
 const getRepeatDayTemplate = (day, isChecked) => {
   return (
@@ -39,24 +44,30 @@ const getColorTemplate = (color, isChecked) => {
   );
 };
 
-const createCardEditorTemplate = function (task, options = {}) {
+const createCardEditorTemplate = (task, options = {}) => {
 
-  const {isDateShowing, isRepeatTask, color, repeatDays, description, dueDate} = options;
+  const {isDateShowing, isRepeatTask, color, repeatDays, description, dueDate, isAllDisabled} = options;
 
-  const isExpired = checkDate(dueDate);
+  const isShowDate = isRepeatTask ? false : isDateShowing;
+  let isDateExist; let isExpired; let dateFieldText; let timeFieldText;
 
-  const isDateExist = !!dueDate;
-  const dateFieldText = isDateExist ? formatDate(dueDate) : ``;
-  const timeFieldText = isDateExist ? `${formatTime(dueDate)}` : ``;
+  if (isShowDate) {
+    isDateExist = !!dueDate;
 
-  const date = isDateShowing ? `${dateFieldText}` : ``;
-  const time = isDateShowing ? `${timeFieldText}` : ``;
+    isExpired = isDateExist ? checkDate(dueDate) : null;
+    dateFieldText = isDateExist ? formatDate(dueDate) : ``;
+    timeFieldText = isDateExist ? `${formatTime(dueDate)}` : ``;
+  }
 
-  const isSaveButtonDisabled = (isDateShowing && isDateExist) || (isRepeatTask && !isRepeating(repeatDays));
+  const disableControl = isAllDisabled ? `disabled` : ``;
+
+  const isValidDescription = description.length >= DESCRIPTION_LENGTH.MIN;
+
+  const isSaveButtonDisabled = !isValidDescription || (isRepeatTask && !isRepeating(repeatDays)) || isAllDisabled;
 
 
-  const repeatClass = isRepeatTask ? `card--repeat` : ``;
-  const deadlineClass = isExpired ? `card--deadline` : ``;
+  const repeatClass = isRepeatTask ? CARD_CLASS.REPEAT : ``;
+  const deadlineClass = isExpired ? CARD_CLASS.DEADLINE : ``;
 
   const repeatDaysMarkup =
     DAYS
@@ -71,7 +82,7 @@ const createCardEditorTemplate = function (task, options = {}) {
 
   return (
     `<article class="card card--edit card--${color} ${repeatClass} ${deadlineClass}">
-      <form class="card__form" method="get">
+      <form class="card__form" method="get" ${disableControl}>
         <div class="card__inner">
           <div class="card__color-bar">
             <svg class="card__color-bar-wave" width="100%" height="10">
@@ -85,6 +96,8 @@ const createCardEditorTemplate = function (task, options = {}) {
                 class="card__text"
                 placeholder="Start typing your text here..."
                 name="text"
+                maxlength="${DESCRIPTION_LENGTH.MAX}"
+                 ${disableControl}
               >${description}</textarea>
             </label>
           </div>
@@ -92,30 +105,30 @@ const createCardEditorTemplate = function (task, options = {}) {
           <div class="card__settings">
             <div class="card__details">
               <div class="card__dates">
-                <button class="card__date-deadline-toggle" type="button">
-                  date: <span class="card__date-status">${isDateShowing ? `yes` : `no`}</span>
+                <button class="card__date-deadline-toggle" type="button" ${disableControl}>
+                  date: <span class="card__date-status">${isShowDate ? `yes` : `no`}</span>
                 </button>
                 ${
-    isDateShowing ?
-      `<fieldset class="card__date-deadline">
+    isShowDate ?
+      `<fieldset class="card__date-deadline" ${disableControl}>
                   <label class="card__input-deadline-wrap">
                     <input
                       class="card__date"
                       type="text"
                       placeholder=""
                       name="date"
-                      value="${date} ${time}"
+                      value="${dateFieldText} ${timeFieldText}"
                     />
                   </label>
                 </fieldset>`
       : ``
     }
 
-                <button class="card__repeat-toggle" type="button">
+                <button class="card__repeat-toggle" type="button" ${disableControl}>
                   repeat:<span class="card__repeat-status">${isRepeatTask ? `yes` : `no`}</span>
                 </button>
                 ${isRepeatTask ?
-      `<fieldset class="card__repeat-days">
+      `<fieldset class="card__repeat-days" ${disableControl}>
                   <div class="card__repeat-days-inner">
                 ${repeatDaysMarkup}
                 </div>
@@ -134,7 +147,7 @@ const createCardEditorTemplate = function (task, options = {}) {
 
           <div class="card__status-btns">
             <button class="card__save" type="submit" ${isSaveButtonDisabled ? `disabled` : ``}>save</button>
-            <button class="card__delete" type="button">delete</button>
+            <button class="card__delete" type="button" ${disableControl}>delete</button>
           </div>
         </div>
       </form>
@@ -153,6 +166,7 @@ class CardEditor extends AbstractSmartComponent {
     this._currentRepeatDays = Object.assign({}, task.repeatDays);
     this._description = task.description;
 
+    this._isAllDisabled = false;
     this._submitHandler = null;
     this._deleteHandler = null;
 
@@ -165,6 +179,7 @@ class CardEditor extends AbstractSmartComponent {
   _setDateClickHandler() {
     this.getElement().querySelector(`.card__date-deadline-toggle`).addEventListener(`click`, () => {
       this._isDateShowing = !this._isDateShowing;
+      this._currentDate = new Date();
       this.rerender();
     });
   }
@@ -175,7 +190,7 @@ class CardEditor extends AbstractSmartComponent {
     if (control) {
       control.addEventListener(`change`, (evt) => {
         this._currentDate = new Date(evt.target.value);
-        // this.rerender();
+        this.rerender();
       });
     }
   }
@@ -193,7 +208,6 @@ class CardEditor extends AbstractSmartComponent {
     if (container) {
       container.addEventListener(`change`, (evt) => {
         this._currentRepeatDays[evt.target.value] = !this._currentRepeatDays[evt.target.value];
-
         this.rerender();
       });
     }
@@ -201,6 +215,7 @@ class CardEditor extends AbstractSmartComponent {
 
   _setColorClickHandler() {
     const container = this.getElement().querySelector(`.card__colors-wrap`);
+
     container.addEventListener(`change`, () => {
       const currentColor = container.querySelector(`input:checked`).value;
       this._currentColor = currentColor;
@@ -211,10 +226,10 @@ class CardEditor extends AbstractSmartComponent {
   _setTextChangeHandler() {
     const control = this.getElement().querySelector(`.card__text`);
 
-    control.addEventListener(`input`, (evt) => {
+    control.addEventListener(`change`, (evt) => {
       const description = he.encode(evt.target.value);
-
       this._description = description;
+      this.rerender();
     });
   }
 
@@ -229,10 +244,12 @@ class CardEditor extends AbstractSmartComponent {
       const options = {
         altInput: true,
         allowInput: true,
-        defaultDate: this._task.dueDate || `today`,
+        defaultDate: this._currentDate || `today`,
       };
 
-      this._flatpickr = flatpickr(inputDate, options);
+      if (inputDate) {
+        this._flatpickr = flatpickr(inputDate, options);
+      }
     }
   }
 
@@ -244,6 +261,7 @@ class CardEditor extends AbstractSmartComponent {
       repeatDays: this._currentRepeatDays,
       description: this._description,
       dueDate: this._currentDate,
+      isAllDisabled: this._isAllDisabled,
     };
 
     return createCardEditorTemplate(this._task, options);
@@ -256,6 +274,8 @@ class CardEditor extends AbstractSmartComponent {
     this._currentColor = this._task.color;
     this._currentRepeatDays = Object.assign({}, this._task.repeatDays);
     this._description = this._task.description;
+    this._isAllDisabled = false;
+
     this.rerender();
   }
 
@@ -283,6 +303,27 @@ class CardEditor extends AbstractSmartComponent {
     this._setTextChangeHandler();
     this.setSubmitHandler(this._submitHandler);
     this.setDeleteHandler(this._deleteHandler);
+  }
+
+  disableForm(state) {
+    this._isAllDisabled = true;
+    this.rerender();
+
+    switch (state) {
+      case REDACTOR_STATES.SAVE:
+        const saveButton = this.getElement().querySelector(`.card__save`);
+        saveButton.textContent = state;
+        break;
+
+      case REDACTOR_STATES.DELETE:
+        const deleteButton = this.getElement().querySelector(`.card__delete`);
+        deleteButton.textContent = state;
+        break;
+    }
+  }
+
+  shake() {
+    this.getElement().classList.add(`shake`);
   }
 }
 
