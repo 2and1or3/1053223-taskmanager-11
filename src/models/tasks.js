@@ -37,7 +37,8 @@ class Tasks {
   }
 
   updateTask(newTask) {
-    this._tasks[newTask.id] = newTask;
+    const taskIndex = this._tasks.findIndex((task) => task.id === newTask.id);
+    this._tasks[taskIndex] = newTask;
 
     this._callHandlers(this._dataChangeHandlers);
   }
@@ -51,6 +52,7 @@ class Tasks {
 
   addTask(newTask) {
     this._tasks.unshift(newTask);
+    this._callHandlers(this._dataChangeHandlers);
   }
 
   setCurrentFilter(filterType) {

@@ -10,7 +10,7 @@ import TasksModel from './models/tasks.js';
 import {render} from './utils/render.js';
 import {MENU_IDS} from './const.js';
 
-const TOKEN = `Basic eo0w590ik2988asdf1a`;
+const TOKEN = `Basic eo0w590ik2988asd1f1a`;
 
 const onScreenChange = (id) => {
   switch (id) {
@@ -55,7 +55,6 @@ api.getTasks()
   render(main, statisticComponent);
   statisticComponent.hide();
 
-
   boardController.render();
 
   menuComponent.setNewTaskHandler((evt) => {
@@ -63,8 +62,8 @@ api.getTasks()
     boardController.createCard(evt);
   });
 })
-.catch(() => {
-  tasksModel.setTasks([]);
+.catch((err) => {
+  throw new Error(err);
 });
 
 menuComponent.setChangeScreenHandler(onScreenChange);
