@@ -142,12 +142,7 @@ class BoardController {
       currentController.disableForm(REDACTOR_STATES.DELETE);
     }
 
-    if (Math.random() > 0.8) {
-      id = -1000;
-    }
-
-    setTimeout(() => {
-      this._api.deleteTask(id)
+    this._api.deleteTask(id)
       .then((isOk) => {
 
         if (isOk) {
@@ -157,7 +152,6 @@ class BoardController {
       .catch(() => {
         currentController.onError();
       });
-    }, 500);
   }
 
   _onDataChange(newData) {
@@ -168,12 +162,7 @@ class BoardController {
       currentController.disableForm(REDACTOR_STATES.SAVE);
     }
 
-    if (Math.random() > 0.8) {
-      newData.id = 50;
-    }
-
-    setTimeout(() => {
-      this._api.updateTask(newData)
+    this._api.updateTask(newData)
       .then((updatedTask) => {
 
         this._tasksModel.updateTask(updatedTask);
@@ -185,7 +174,6 @@ class BoardController {
       .catch(() => {
         currentController.onError();
       });
-    }, 500);
   }
 
   _onDataAdd(newTask) {
@@ -196,8 +184,7 @@ class BoardController {
       currentController.disableForm(REDACTOR_STATES.SAVE);
     }
 
-    setTimeout(() => {
-      this._api.createTask(newTask)
+    this._api.createTask(newTask)
       .then((task) => {
         this._tasksModel.addTask(task);
         currentController.setIsEmptyCard(false);
@@ -210,7 +197,6 @@ class BoardController {
       .catch(() => {
         currentController.onError();
       });
-    }, 500);
   }
 
   _onSortTypeChanged(sortKey) {
@@ -268,7 +254,6 @@ class BoardController {
       },
       isArchive: false,
       isFavorite: false,
-      id: this._tasksModel.getAllTasks().length,
     };
 
     return newTask;

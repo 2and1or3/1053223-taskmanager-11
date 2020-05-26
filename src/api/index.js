@@ -1,4 +1,4 @@
-import TaskAdapter from './models/task-adapter.js';
+import TaskAdapter from '../models/task-adapter.js';
 
 const MAIN_URL = `https://11.ecmascript.pages.academy/task-manager/tasks`;
 const METHODS = {
@@ -7,6 +7,8 @@ const METHODS = {
   POST: `POST`,
   DELETE: `DELETE`,
 };
+
+const SYNC_URL = `sync`;
 
 const checkStatus = (response) => {
   if (response.status >= 200 && response.status < 300) {
@@ -40,11 +42,11 @@ class API {
     const headers = new Headers();
 
     return this._getRequest(headers)
-              .then((response) => response.json())
-              .then((tasks) => TaskAdapter.parseTasks(tasks))
-              .catch((err) => {
-                throw new Error(err);
-              });
+            .then((response) => response.json())
+            .then((tasks) => TaskAdapter.parseTasks(tasks))
+            .catch((err) => {
+              throw new Error(err);
+            });
   }
 
   updateTask(newData) {
@@ -67,7 +69,6 @@ class API {
     headers.append(`Content-Type`, `application/json`);
 
     localTask = TaskAdapter.toRAW(localTask);
-    delete localTask.id;
 
     const body = JSON.stringify(localTask);
 
@@ -84,6 +85,18 @@ class API {
 
     return this._getRequest(headers, null, METHODS.DELETE, id)
             .then((response) => response.ok);
+  }
+
+  sync(freshTasks) {
+    const headers = new Headers();
+    headers.append(`Content-Type`, `application/json`);
+
+    freshTasks = freshTasks.map((freshTask) => TaskAdapter.toRAW(freshTask));
+
+    const body = JSON.stringify(freshTasks);
+
+    return this._getRequest(headers, body, METHODS.POST, SYNC_URL)
+            .then((response) => response.json());
   }
 }
 

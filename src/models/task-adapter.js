@@ -1,5 +1,3 @@
-
-
 class TaskAdapter {
   constructor(task) {
     this.id = task.id;
